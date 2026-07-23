@@ -23,6 +23,7 @@ class RequisitionController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
+            'supplier_id' => ['nullable', 'exists:suppliers,id'],
             'title' => ['required', 'string', 'max:255'],
             'department' => ['nullable', 'string', 'max:255'],
             'needed_by' => ['nullable', 'date'],
@@ -34,6 +35,7 @@ class RequisitionController extends Controller
             'items.*.unit' => ['nullable', 'string', 'max:50'],
             'items.*.unit_price' => ['required', 'numeric', 'min:0'],
             'items.*.service_id' => ['nullable', 'exists:services,id'],
+            'items.*.justification' => ['nullable', 'string'],
             'action' => ['required', 'in:draft,continue'],
         ]);
 
@@ -47,6 +49,7 @@ class RequisitionController extends Controller
                 'title' => $data['title'],
                 'department' => $data['department'] ?? Auth::user()->department,
                 'requestor_id' => Auth::id(),
+                'supplier_id' => $data['supplier_id'] ?? null,
                 'needed_by' => $data['needed_by'] ?? null,
                 'purpose' => $data['purpose'] ?? null,
                 'subtotal' => $subtotal,
@@ -66,6 +69,7 @@ class RequisitionController extends Controller
                     'unit' => $item['unit'] ?? 'service',
                     'unit_price' => $item['unit_price'],
                     'total' => $item['qty'] * $item['unit_price'],
+                    'justification' => $item['justification'] ?? null,
                 ]);
             }
 
@@ -76,70 +80,92 @@ class RequisitionController extends Controller
             return redirect()->route('requisitions.tracking')->with('status', 'Requisition saved as draft.');
         }
 
-        return redirect()->route('requisitions.route', $requisition);
+        self::createDefaultApprovalSteps($requisition);
+
+        return redirect()->route('requisitions.receipt', $requisition)->with('status', 'Purchase Requisition submitted successfully! Receipt generated.');
+    }
+
+    public function showReceipt(Requisition $requisition)
+    {
+        $requisition->load(['requestor', 'recommendedSupplier', 'items', 'approvalSteps.approver']);
+        return view('requisitions.receipt', compact('requisition'));
+    }
+
+    public function downloadReceiptPdf(Requisition $requisition)
+    {
+        $requisition->load(['requestor', 'recommendedSupplier', 'items', 'approvalSteps.approver']);
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('requisitions.receipt_pdf', compact('requisition'));
+        return $pdf->download('PR_Receipt_' . $requisition->code . '.pdf');
     }
 
     public function showRoute(Requisition $requisition)
     {
         $this->authorizeOwner($requisition);
 
-        $approvers = [
-            'manager' => User::where('role', 'manager')->get(),
-            'department_head' => User::where('role', 'department_head')->get(),
-            'finance_manager' => User::where('role', 'finance_manager')->get(),
-        ];
-
-        $steps = $requisition->approvalSteps;
-
-        if ($steps->isEmpty()) {
-            $steps = collect([
-                new ApprovalStep(['step_order' => 1, 'step_type' => 'manager_approval', 'label' => 'Manager approval', 'description' => 'First level approval from the requestor\'s manager', 'required' => true]),
-                new ApprovalStep(['step_order' => 2, 'step_type' => 'department_head_approval', 'label' => 'Department Head Approval', 'description' => 'Approval from the head of the department', 'required' => true]),
-                new ApprovalStep(['step_order' => 3, 'step_type' => 'finance_approval', 'label' => 'Department Head Approval', 'description' => 'Final approval from Finance Department', 'required' => true]),
-            ]);
+        if ($requisition->approvalSteps()->count() === 0) {
+            self::createDefaultApprovalSteps($requisition);
         }
 
-        return view('requisitions.route-approval', compact('requisition', 'approvers', 'steps'));
+        return redirect()->route('requisitions.receipt', $requisition)->with('status', 'Requisition submitted for 3-Level approval.');
     }
 
     public function storeRoute(Request $request, Requisition $requisition)
     {
         $this->authorizeOwner($requisition);
 
-        $data = $request->validate([
-            'approval_type' => ['required', 'in:sequential,parallel'],
-            'steps' => ['required', 'array', 'min:1'],
-            'steps.*.step_type' => ['required', 'in:manager_approval,department_head_approval,finance_approval'],
-            'steps.*.label' => ['required', 'string', 'max:255'],
-            'steps.*.description' => ['nullable', 'string', 'max:255'],
-            'steps.*.approver_id' => ['required', 'exists:users,id'],
-            'steps.*.required' => ['nullable'],
-        ]);
+        self::createDefaultApprovalSteps($requisition);
 
-        DB::transaction(function () use ($data, $requisition) {
+        return redirect()->route('requisitions.receipt', $requisition)->with('status', 'Requisition submitted for 3-Level approval.');
+    }
+
+    public static function createDefaultApprovalSteps(Requisition $requisition): void
+    {
+        $sarah = User::where('username', 'sarah.jenkins')->first() ?? User::where('role', 'manager')->first() ?? Auth::user();
+        $michael = User::where('username', 'finance.manager')->first() ?? User::where('role', 'finance_manager')->first() ?? $sarah;
+        $johny = User::where('username', 'johny.papa')->first() ?? User::where('role', 'department_head')->first() ?? $sarah;
+
+        $steps = [
+            [
+                'step_order' => 1,
+                'step_type' => 'manager_approval',
+                'label' => 'Project Manager Approval',
+                'description' => 'Level 1: Sarah Jenkins (Project Manager)',
+                'required' => true,
+                'approver_id' => $sarah->id,
+                'status' => 'pending',
+            ],
+            [
+                'step_order' => 2,
+                'step_type' => 'finance_approval',
+                'label' => 'Finance Manager Approval',
+                'description' => 'Level 2: Michael Finn (Finance Manager)',
+                'required' => true,
+                'approver_id' => $michael->id,
+                'status' => 'pending',
+            ],
+            [
+                'step_order' => 3,
+                'step_type' => 'department_head_approval',
+                'label' => 'Head Approval',
+                'description' => 'Level 3: Johny Papa (Head)',
+                'required' => true,
+                'approver_id' => $johny->id,
+                'status' => 'pending',
+            ],
+        ];
+
+        DB::transaction(function () use ($requisition, $steps) {
             $requisition->approvalSteps()->delete();
-
-            foreach ($data['steps'] as $index => $step) {
-                ApprovalStep::create([
-                    'requisition_id' => $requisition->id,
-                    'step_order' => $index + 1,
-                    'step_type' => $step['step_type'],
-                    'label' => $step['label'],
-                    'description' => $step['description'] ?? null,
-                    'required' => ! empty($step['required']),
-                    'approver_id' => $step['approver_id'],
-                    'status' => 'pending',
-                ]);
+            foreach ($steps as $s) {
+                ApprovalStep::create(array_merge($s, ['requisition_id' => $requisition->id]));
             }
 
             $requisition->update([
-                'approval_type' => $data['approval_type'],
+                'approval_type' => 'sequential',
                 'status' => 'pending_approval',
                 'submitted_at' => now(),
             ]);
         });
-
-        return redirect()->route('requisitions.tracking')->with('status', 'Requisition routed for approval.');
     }
 
     public function tracking()

@@ -12,7 +12,10 @@ class PurchaseOrderController extends Controller
 {
     public function index()
     {
-        $purchaseOrders = PurchaseOrder::with('supplier', 'items', 'requisition')->orderBy('created_at', 'desc')->get();
+        $purchaseOrders = PurchaseOrder::with('supplier', 'items', 'requisition')
+            ->orderBy('created_at', 'desc')
+            ->orderBy('id', 'desc')
+            ->get();
         $suppliers = Supplier::orderBy('name')->get();
 
         // Calculate dynamic stats
@@ -81,7 +84,7 @@ class PurchaseOrderController extends Controller
             $lastNumber = (int) end($parts);
             $nextNumber = $lastNumber + 1;
         }
-        $poNumber = 'PO-'.$year.'-'.str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
+        $poNumber = 'PO-'.$year.'-'.str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
         $po = PurchaseOrder::create([
             'po_number' => $poNumber,
             'supplier_id' => $data['supplier_id'],
@@ -97,6 +100,7 @@ class PurchaseOrderController extends Controller
                 'sku' => $it['sku'] ?? null,
                 'name' => $it['name'],
                 'quantity' => $it['quantity'],
+                'unit' => $it['unit'] ?? $it['uom'] ?? 'Unit',
                 'unit_price' => $it['unit_price'],
                 'line_total' => $line,
             ]);
@@ -187,5 +191,19 @@ class PurchaseOrderController extends Controller
         ]);
 
         return back()->with('status','Invoice matched to PO');
+    }
+
+    public function downloadPdf(PurchaseOrder $purchaseOrder)
+    {
+        $purchaseOrder->load(['supplier', 'requisition.requestor', 'requisition.items', 'items']);
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('purchase_orders.pdf', ['po' => $purchaseOrder]);
+        return $pdf->download($purchaseOrder->po_number . '.pdf');
+    }
+
+    public function streamPdf(PurchaseOrder $purchaseOrder)
+    {
+        $purchaseOrder->load(['supplier', 'requisition.requestor', 'requisition.items', 'items']);
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('purchase_orders.pdf', ['po' => $purchaseOrder]);
+        return $pdf->stream($purchaseOrder->po_number . '.pdf');
     }
 }

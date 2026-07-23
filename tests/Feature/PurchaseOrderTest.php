@@ -136,7 +136,7 @@ class PurchaseOrderTest extends TestCase
         ]);
 
         $latest = PurchaseOrder::orderBy('id', 'desc')->first();
-        $this->assertEquals("PO-{$year}-1001", $latest->po_number);
+        $this->assertEquals("PO-{$year}-001001", $latest->po_number);
     }
 
     public function test_can_send_purchase_order()

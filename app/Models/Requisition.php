@@ -10,7 +10,7 @@ class Requisition extends Model
     use HasFactory;
 
     protected $fillable = [
-        'code', 'title', 'department', 'requestor_id', 'needed_by', 'purpose',
+        'code', 'title', 'department', 'requestor_id', 'supplier_id', 'needed_by', 'purpose',
         'subtotal', 'tax_rate', 'tax_amount', 'total', 'approval_type',
         'status', 'urgency', 'submitted_at',
     ];
@@ -23,6 +23,11 @@ class Requisition extends Model
     public function requestor()
     {
         return $this->belongsTo(User::class, 'requestor_id');
+    }
+
+    public function recommendedSupplier()
+    {
+        return $this->belongsTo(Supplier::class, 'supplier_id');
     }
 
     public function items()

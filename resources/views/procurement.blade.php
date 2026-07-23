@@ -534,11 +534,42 @@
                     </div>
                 </div>
 
-                <div class="tabs" role="tablist" aria-label="PO Filters">
-                    <button type="button" class="tab active" data-filter="all">All <span class="chip">{{ $purchaseOrders->count() }}</span></button>
-                    <button type="button" class="tab" data-filter="draft">Draft <span class="chip">{{ $purchaseOrders->where('status','draft')->count() }}</span></button>
-                    <button type="button" class="tab" data-filter="sent">Sent to Supplier <span class="chip">{{ $purchaseOrders->where('status','sent')->count() }}</span></button>
-                    <button type="button" class="tab" data-filter="received">Fully Received <span class="chip">{{ $purchaseOrders->where('status','received')->count() }}</span></button>
+                <!-- Filter & Sorting Control Toolbar -->
+                <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-4 bg-white p-3.5 border border-slate-200 rounded-2xl shadow-sm">
+                    <!-- Filter Options -->
+                    <div class="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 w-full md:w-auto">
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider mr-1 shrink-0">Filter:</span>
+                        <button type="button" class="po-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold transition active bg-[#235c2b] text-white shadow-sm" data-filter="all">
+                            All <span class="ml-1 opacity-80">({{ $purchaseOrders->count() }})</span>
+                        </button>
+                        <button type="button" class="po-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold transition text-slate-600 hover:bg-slate-100" data-filter="pending">
+                            Pending <span class="ml-1 opacity-80">({{ $purchaseOrders->whereIn('status', ['draft', 'pending', 'sent'])->count() }})</span>
+                        </button>
+                        <button type="button" class="po-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold transition text-slate-600 hover:bg-slate-100" data-filter="approved">
+                            Approved <span class="ml-1 opacity-80">({{ $purchaseOrders->where('status', 'approved')->count() }})</span>
+                        </button>
+                        <button type="button" class="po-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold transition text-slate-600 hover:bg-slate-100" data-filter="rejected">
+                            Rejected <span class="ml-1 opacity-80">({{ $purchaseOrders->whereIn('status', ['rejected', 'cancelled'])->count() }})</span>
+                        </button>
+                        <button type="button" class="po-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold transition text-slate-600 hover:bg-slate-100" data-filter="completed">
+                            Completed <span class="ml-1 opacity-80">({{ $purchaseOrders->whereIn('status', ['received', 'completed'])->count() }})</span>
+                        </button>
+                    </div>
+
+                    <!-- Sorting Options -->
+                    <div class="flex items-center gap-2 shrink-0 w-full md:w-auto justify-end">
+                        <label for="po-sort-select" class="text-xs font-bold text-slate-400 uppercase tracking-wider shrink-0">Sort By:</label>
+                        <select id="po-sort-select" class="px-3 py-1.5 border border-slate-300 rounded-xl text-xs font-semibold bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
+                            <option value="latest">Latest First</option>
+                            <option value="oldest">Oldest First</option>
+                            <option value="priority">Priority Level</option>
+                            <option value="po_number">Purchase Order Number</option>
+                            <option value="date_created">Date Created</option>
+                            <option value="vendor">Vendor Name</option>
+                            <option value="status">Status</option>
+                            <option value="amount">Total Amount</option>
+                        </select>
+                    </div>
                 </div>
 
                 <!-- TABLE: ALL -->
@@ -566,7 +597,15 @@
                                         $vat = $subtotal * 0.12;
                                         $isOverdue = $po->status !== 'received' && $po->expected_delivery && $po->expected_delivery->isPast();
                                     @endphp
-                                    <tr class="po-row {{ $isOverdue ? 'po-row-overdue' : '' }}" style="transition: all 0.2s ease;">
+                                    <tr class="po-row {{ $isOverdue ? 'po-row-overdue' : '' }}"
+                                        data-po-id="{{ $po->id }}"
+                                        data-po-number="{{ strtolower($po->po_number) }}"
+                                        data-status="{{ strtolower($po->status) }}"
+                                        data-vendor="{{ strtolower($po->supplier->name ?? '') }}"
+                                        data-priority="{{ strtolower($po->requisition->urgency ?? 'medium') }}"
+                                        data-date="{{ $po->created_at ? $po->created_at->timestamp : 0 }}"
+                                        data-amount="{{ (float) $po->total }}"
+                                        style="transition: all 0.2s ease;">
                                         <td style="font-weight: 700; color: #165c32;">{{ $po->po_number }}</td>
                                         <td>{{ $po->requisition->code ?? '—' }}</td>
                                         <td>{{ $po->supplier->name ?? '—' }}</td>
@@ -602,6 +641,7 @@
                                         </td>
                                         <td>
                                             <div class="action-row">
+                                                <a class="btn-xs btn-outline-green" href="{{ route('purchase_orders.pdf', $po) }}" target="_blank"><i data-lucide="file-text" class="w-3.5 h-3.5"></i> PDF</a>
                                                 <button type="button" class="btn-xs btn-soft" onclick="exportTableToCSV('table-data-all', '{{ $po->po_number }}.csv')"><i data-lucide="download" class="w-3.5 h-3.5"></i> CSV</button>
                                                 @if($po->status === 'draft')
                                                     <a class="btn-xs btn-outline-green" href="{{ route('procurement.create') }}?edit={{ $po->id }}"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i> Edit</a>
@@ -997,30 +1037,89 @@
                 document.body.removeChild(link);
             };
 
-            if(tabButtons.length && tableContainers.length) {
-                function switchTab(filter) {
-                    tableContainers.forEach(container => {
-                        if (container.id === `tab-${filter}`) {
-                            container.style.display = 'block';
-                        } else {
-                            container.style.display = 'none';
+            // --- Dynamic Order Management Sorting & Filtering ---
+            const filterBtns = document.querySelectorAll('.po-filter-btn');
+            const sortSelect = document.getElementById('po-sort-select');
+            const tableBody = document.querySelector('#table-data-all tbody');
+
+            if (tableBody && filterBtns.length) {
+                let currentFilter = 'all';
+                let currentSort = 'latest';
+
+                function applySortAndFilter() {
+                    const rows = Array.from(tableBody.querySelectorAll('tr.po-row'));
+
+                    // 1. Filter
+                    rows.forEach(row => {
+                        const status = (row.dataset.status || '').toLowerCase();
+                        let show = false;
+
+                        if (currentFilter === 'all') {
+                            show = true;
+                        } else if (currentFilter === 'pending') {
+                            show = ['draft', 'pending', 'sent'].includes(status);
+                        } else if (currentFilter === 'approved') {
+                            show = status === 'approved';
+                        } else if (currentFilter === 'rejected') {
+                            show = status === 'rejected' || status === 'cancelled';
+                        } else if (currentFilter === 'completed') {
+                            show = status === 'received' || status === 'completed';
                         }
+
+                        row.style.display = show ? '' : 'none';
                     });
 
-                    tabButtons.forEach(btn => {
-                        btn.classList.toggle('active', btn.dataset.filter === filter);
+                    // 2. Sort
+                    const visibleRows = rows.filter(r => r.style.display !== 'none');
+                    
+                    visibleRows.sort((a, b) => {
+                        if (currentSort === 'latest') {
+                            return Number(b.dataset.date || 0) - Number(a.dataset.date || 0);
+                        } else if (currentSort === 'oldest') {
+                            return Number(a.dataset.date || 0) - Number(b.dataset.date || 0);
+                        } else if (currentSort === 'priority') {
+                            const priorityWeight = { high: 3, medium: 2, low: 1 };
+                            const pA = priorityWeight[(a.dataset.priority || '').toLowerCase()] || 0;
+                            const pB = priorityWeight[(b.dataset.priority || '').toLowerCase()] || 0;
+                            return pB - pA;
+                        } else if (currentSort === 'po_number') {
+                            return (a.dataset.poNumber || '').localeCompare(b.dataset.poNumber || '');
+                        } else if (currentSort === 'date_created') {
+                            return Number(b.dataset.date || 0) - Number(a.dataset.date || 0);
+                        } else if (currentSort === 'vendor') {
+                            return (a.dataset.vendor || '').localeCompare(b.dataset.vendor || '');
+                        } else if (currentSort === 'status') {
+                            return (a.dataset.status || '').localeCompare(b.dataset.status || '');
+                        } else if (currentSort === 'amount') {
+                            return Number(b.dataset.amount || 0) - Number(a.dataset.amount || 0);
+                        }
+                        return 0;
                     });
+
+                    // Re-append sorted rows to tableBody
+                    visibleRows.forEach(r => tableBody.appendChild(r));
                 }
 
-                tabButtons.forEach(btn => btn.addEventListener('click', function(e){
-                    e.preventDefault();
-                    const filter = this.dataset.filter || 'all';
-                    switchTab(filter);
-                }));
+                filterBtns.forEach(btn => {
+                    btn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        filterBtns.forEach(b => {
+                            b.classList.remove('active', 'bg-[#235c2b]', 'text-white', 'shadow-sm');
+                            b.classList.add('text-slate-600');
+                        });
+                        this.classList.add('active', 'bg-[#235c2b]', 'text-white', 'shadow-sm');
+                        this.classList.remove('text-slate-600');
 
-                const activeTab = document.querySelector('.tabs .tab.active');
-                if (activeTab) {
-                    switchTab(activeTab.dataset.filter || 'all');
+                        currentFilter = this.dataset.filter || 'all';
+                        applySortAndFilter();
+                    });
+                });
+
+                if (sortSelect) {
+                    sortSelect.addEventListener('change', function() {
+                        currentSort = this.value;
+                        applySortAndFilter();
+                    });
                 }
             }
 

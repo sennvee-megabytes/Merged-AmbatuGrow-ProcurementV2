@@ -13,10 +13,6 @@
             <i class="fa-solid fa-file-invoice"></i>
             <span>Create Requisition</span>
         </button>
-        <button @click="$dispatch('open-po-modal')" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2.5 rounded-md transition flex items-center gap-1.5">
-            <i class="fa-solid fa-cart-shopping"></i>
-            <span>Create PO</span>
-        </button>
     </div>
 </div>
 

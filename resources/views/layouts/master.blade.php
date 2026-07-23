@@ -1,5 +1,10 @@
 @php
-    $suppliers = \App\Models\Supplier::orderBy('name')->get();
+    $suppliers = \App\Models\Supplier::get()
+        ->unique(function ($s) {
+            return strtolower(trim(preg_replace('/\s+\d+$/', '', $s->name)));
+        })
+        ->sortBy('name')
+        ->values();
     $catalogProducts = \App\Models\Product::with('uom')->orderBy('name')->get();
 @endphp
 <!DOCTYPE html>
@@ -675,33 +680,22 @@
                     </div>
 
                     <!-- Navigation List -->
-                    <nav class="space-y-2 w-full text-left font-sans">
-                        <a href="{{ route('suppliers.dashboard') }}" class="flex items-center justify-start gap-3 px-4 py-3 rounded-full text-sm font-bold transition-all w-full text-left {{ request()->routeIs('suppliers.dashboard') ? 'bg-[#235c2b] text-white shadow-sm' : 'text-slate-800 hover:bg-[#e8ece6] hover:text-slate-900' }}">
-                            <span class="text-base shrink-0">📊</span>
+                    <nav class="space-y-1.5 w-full text-left font-sans">
+                        <a href="{{ route('suppliers.dashboard') }}" class="flex items-center justify-start gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all w-full text-left {{ request()->routeIs('suppliers.dashboard') ? 'bg-[#235c2b] text-white shadow-sm' : 'text-slate-800 hover:bg-[#e8ece6] hover:text-slate-900' }}">
+                            <i class="fa-solid fa-chart-line w-5 text-center text-base shrink-0"></i>
                             <span>Dashboard</span>
                         </a>
-                        <a href="{{ route('suppliers.index') }}" class="flex items-center justify-start gap-3 px-4 py-3 rounded-full text-sm font-bold transition-all w-full text-left {{ request()->routeIs('suppliers.index') ? 'bg-[#235c2b] text-white shadow-sm' : 'text-slate-800 hover:bg-[#e8ece6] hover:text-slate-900' }}">
-                            <span class="text-base shrink-0">🤝</span>
+                        <a href="{{ route('suppliers.index') }}" class="flex items-center justify-start gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all w-full text-left {{ request()->routeIs('suppliers.index') ? 'bg-[#235c2b] text-white shadow-sm' : 'text-slate-800 hover:bg-[#e8ece6] hover:text-slate-900' }}">
+                            <i class="fa-solid fa-handshake w-5 text-center text-base shrink-0"></i>
                             <span>View All Suppliers</span>
                         </a>
-                        <a href="{{ route('suppliers.active') }}" class="flex items-center justify-start gap-3 px-4 py-3 rounded-full text-sm font-bold transition-all w-full text-left {{ request()->routeIs('suppliers.active') ? 'bg-[#235c2b] text-white shadow-sm' : 'text-slate-800 hover:bg-[#e8ece6] hover:text-slate-900' }}">
-                            <span class="text-base shrink-0">✅</span>
+                        <a href="{{ route('suppliers.active') }}" class="flex items-center justify-start gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all w-full text-left {{ request()->routeIs('suppliers.active') ? 'bg-[#235c2b] text-white shadow-sm' : 'text-slate-800 hover:bg-[#e8ece6] hover:text-slate-900' }}">
+                            <i class="fa-solid fa-circle-check w-5 text-center text-base shrink-0"></i>
                             <span>Active Suppliers</span>
                         </a>
-                        <a href="{{ route('suppliers.pending') }}" class="flex items-center justify-start gap-3 px-4 py-3 rounded-full text-sm font-bold transition-all w-full text-left {{ request()->routeIs('suppliers.pending') ? 'bg-[#235c2b] text-white shadow-sm' : 'text-slate-800 hover:bg-[#e8ece6] hover:text-slate-900' }}">
-                            <span class="text-base shrink-0">⏳</span>
+                        <a href="{{ route('suppliers.pending') }}" class="flex items-center justify-start gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all w-full text-left {{ request()->routeIs('suppliers.pending') ? 'bg-[#235c2b] text-white shadow-sm' : 'text-slate-800 hover:bg-[#e8ece6] hover:text-slate-900' }}">
+                            <i class="fa-solid fa-clock w-5 text-center text-base shrink-0"></i>
                             <span>Pending Verification</span>
-                        </a>
-                        <a href="{{ route('suppliers.blacklisted') }}" class="flex items-center justify-start gap-3 px-4 py-3 rounded-full text-sm font-bold transition-all w-full text-left {{ request()->routeIs('suppliers.blacklisted') ? 'bg-[#235c2b] text-white shadow-sm' : 'text-slate-800 hover:bg-[#e8ece6] hover:text-slate-900' }}">
-                            <span class="text-base shrink-0">🚫</span>
-                            <span>Blacklisted Suppliers</span>
-                        </a>
-                        
-                        <div class="h-[1px] bg-slate-200 my-3"></div>
-                        
-                        <a href="{{ route('suppliers.create') }}" class="flex items-center justify-start gap-3 px-4 py-3 rounded-full text-sm font-bold transition-all w-full text-left {{ request()->routeIs('suppliers.create') ? 'bg-[#235c2b] text-white shadow-sm' : 'text-slate-800 hover:bg-[#e8ece6] hover:text-slate-900' }}">
-                            <span class="text-base shrink-0">➕</span>
-                            <span>Add New Supplier</span>
                         </a>
                     </nav>
                 </div>
@@ -1310,6 +1304,15 @@
                                     <option value="Low">Low</option>
                                 </select>
                             </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-xs font-semibold text-slate-500 mb-1">RECOMMENDED SUPPLIER</label>
+                                <select name="supplier_id" x-model="supplierId" class="w-full px-3 py-2 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
+                                    <option value="">-- Select Recommended Supplier (Optional) --</option>
+                                    @foreach($suppliers as $sup)
+                                        <option value="{{ $sup->id }}">{{ $sup->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
                         </div>
 
                         <div>
@@ -1321,24 +1324,21 @@
                             </div>
 
                             <!-- Table Header (hidden on mobile) -->
-                            <div class="hidden md:grid grid-cols-12 gap-3 px-4 py-2 bg-slate-100 rounded-lg text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">
+                            <div class="hidden md:grid grid-cols-12 gap-2 px-4 py-2 bg-slate-100 rounded-lg text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">
                                 <div class="col-span-2">SKU</div>
                                 <div class="col-span-3">Item Name</div>
-                                <div class="col-span-2">UOM</div>
-                                <div class="col-span-2">Qty</div>
-                                <div class="col-span-2">Est. Unit Cost (₱)</div>
-                                <div class="col-span-1 text-right">Total</div>
+                                <div class="col-span-1">UOM</div>
+                                <div class="col-span-1">Qty</div>
+                                <div class="col-span-2">Unit Cost (₱)</div>
+                                <div class="col-span-2 text-right">Total</div>
+                                <div class="col-span-1 text-center">Action</div>
                             </div>
 
-                            <div class="border border-slate-200 rounded-xl overflow-hidden bg-slate-50/50 p-4 space-y-4 max-h-[250px] overflow-y-auto">
+                            <div class="border border-slate-200 rounded-xl overflow-hidden bg-slate-50/50 p-3 space-y-3 max-h-[280px] overflow-y-auto">
                                 <template x-for="(item, index) in reqItems" :key="index">
-                                    <div class="grid grid-cols-12 gap-3 items-center bg-white p-3 rounded-lg border border-slate-100 shadow-sm relative pt-6 md:pt-3">
-                                        <button type="button" @click="if(reqItems.length > 1) removeReqItem(index)" class="absolute top-1 right-2 text-slate-400 hover:text-red-500 md:hidden">
-                                            <i class="fa-solid fa-trash-can"></i>
-                                        </button>
-                                        
+                                    <div class="grid grid-cols-12 gap-2 items-center bg-white p-3 rounded-lg border border-slate-100 shadow-sm relative">
                                         <!-- Database Order Catalog Dropdown -->
-                                        <div class="col-span-12 pb-1 border-b border-slate-100">
+                                        <div class="col-span-12 pb-1 border-b border-slate-100 mb-1">
                                             <label class="block text-[10px] font-extrabold text-emerald-800 uppercase tracking-wider mb-1 flex items-center gap-1.5">
                                                 <i class="fa-solid fa-cart-shopping text-emerald-600"></i> Select Order Item (Database Catalog)
                                             </label>
@@ -1351,33 +1351,34 @@
                                         </div>
                                         <div class="col-span-12 md:col-span-2">
                                             <label class="block text-[10px] font-semibold text-slate-400 mb-0.5 md:hidden">SKU</label>
-                                            <input type="text" x-model="item.sku" :name="'items[' + index + '][sku]'" placeholder="e.g. AGRI-SEED-042" class="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs">
+                                            <input type="text" x-model="item.sku" :name="'items[' + index + '][sku]'" placeholder="e.g. AGRI-042" class="w-full px-2 py-1.5 border border-slate-200 rounded-lg text-xs">
                                         </div>
                                         <div class="col-span-12 md:col-span-3">
                                             <label class="block text-[10px] font-semibold text-slate-400 mb-0.5 md:hidden">Item Name</label>
-                                            <input type="text" x-model="item.name" :name="'items[' + index + '][name]'" required placeholder="e.g. Hybrid Rice Seeds" class="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs">
+                                            <input type="text" x-model="item.name" :name="'items[' + index + '][name]'" required placeholder="e.g. Rice Seeds" class="w-full px-2 py-1.5 border border-slate-200 rounded-lg text-xs truncate">
                                         </div>
-                                        <div class="col-span-4 md:col-span-2">
+                                        <div class="col-span-6 md:col-span-1">
                                             <label class="block text-[10px] font-semibold text-slate-400 mb-0.5 md:hidden">UOM</label>
-                                            <input type="text" x-model="item.unit" :name="'items[' + index + '][unit]'" required placeholder="Unit" class="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs">
+                                            <input type="text" x-model="item.unit" :name="'items[' + index + '][unit]'" required placeholder="Unit" class="w-full px-2 py-1.5 border border-slate-200 rounded-lg text-xs">
                                         </div>
-                                        <div class="col-span-4 md:col-span-2">
+                                        <div class="col-span-6 md:col-span-1">
                                             <label class="block text-[10px] font-semibold text-slate-400 mb-0.5 md:hidden">Qty</label>
-                                            <input type="number" x-model.number="item.qty" :name="'items[' + index + '][qty]'" required min="1" class="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs">
+                                            <input type="number" x-model.number="item.qty" :name="'items[' + index + '][qty]'" required min="1" class="w-full px-2 py-1.5 border border-slate-200 rounded-lg text-xs">
                                         </div>
-                                        <div class="col-span-4 md:col-span-2">
-                                            <label class="block text-[10px] font-semibold text-slate-400 mb-0.5 md:hidden">Est. Unit Cost (₱)</label>
-                                            <input type="number" x-model.number="item.cost" :name="'items[' + index + '][unit_price]'" required min="0" class="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs">
+                                        <div class="col-span-6 md:col-span-2">
+                                            <label class="block text-[10px] font-semibold text-slate-400 mb-0.5 md:hidden">Unit Cost (₱)</label>
+                                            <input type="number" x-model.number="item.cost" :name="'items[' + index + '][unit_price]'" required min="0" class="w-full px-2 py-1.5 border border-slate-200 rounded-lg text-xs">
                                         </div>
-                                        <div class="col-span-12 md:col-span-1 flex items-center justify-between pt-1 md:pt-0">
-                                            <span class="text-xs font-bold text-slate-600 pr-2 md:pr-0 md:w-full md:text-right" x-text="'₱' + Number(item.qty * item.cost).toLocaleString('en-US')">₱0</span>
-                                            <button type="button" @click="if(reqItems.length > 1) removeReqItem(index)" class="text-slate-400 hover:text-red-500 hidden md:block ml-2 shrink-0">
+                                        <div class="col-span-5 md:col-span-2 flex items-center justify-end text-right">
+                                            <span class="text-xs font-bold text-slate-700 whitespace-nowrap" x-text="'₱' + Number(item.qty * item.cost).toLocaleString('en-US', {minimumFractionDigits: 2})">₱0.00</span>
+                                        </div>
+                                        <div class="col-span-1 md:col-span-1 flex items-center justify-center">
+                                            <button type="button" @click="if(reqItems.length > 1) removeReqItem(index)" class="text-slate-400 hover:text-red-500 transition-colors p-1" title="Remove Item">
                                                 <i class="fa-solid fa-trash-can"></i>
                                             </button>
                                         </div>
-                                        <div class="col-span-12">
-                                            <label class="block text-[10px] font-semibold text-slate-400 mb-0.5">Justification</label>
-                                            <input type="text" x-model="item.justification" placeholder="Reason for request..." class="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs">
+                                        <div class="col-span-12 mt-1">
+                                            <input type="text" x-model="item.justification" placeholder="Reason / Description for request..." class="w-full px-2 py-1.5 border border-slate-200 rounded-lg text-xs bg-slate-50/60">
                                         </div>
                                     </div>
                                 </template>
