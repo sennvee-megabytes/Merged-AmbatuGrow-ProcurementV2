@@ -40,6 +40,12 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
+        html, body {
+            width: 100% !important;
+            max-width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
         body {
             font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
         }
@@ -510,7 +516,7 @@
     ];
 @endphp
 
-<div class="min-h-screen lg:flex">
+<div class="min-h-screen w-full min-w-0 max-w-none lg:flex">
     <!-- Mobile Top Bar -->
     <div class="lg:hidden bg-[#f4f7f3] border-b border-slate-200 px-4 py-3 flex items-center justify-between sticky top-0 z-30 w-full shrink-0">
         <div class="flex items-center gap-3">
@@ -790,7 +796,7 @@
         @endif
     </aside>
 
-    <div class="flex-1 min-w-0 flex flex-col">
+    <div class="flex-1 w-full min-w-0 max-w-none flex flex-col">
         <header class="top-bar-unified">
             <div class="top-bar-left">
                 <h2>@yield('title', 'Dashboard')</h2>
@@ -801,7 +807,7 @@
             </div>
         </header>
 
-        <main class="flex-1 p-6">
+        <main class="flex-1 w-full min-w-0 max-w-none flex flex-col p-6">
             @if (session('success') || session('status') || session('error'))
                 <div class="px-5 lg:px-8 pt-6">
                     @if (session('success'))

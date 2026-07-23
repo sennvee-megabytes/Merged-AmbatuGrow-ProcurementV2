@@ -42,6 +42,7 @@ Route::prefix('goods-receipt-invoice-matching')->middleware(['auth'])->group(fun
     Route::post('/record-grn', [MatchingController::class, 'storeGrn'])->name('matching.store_grn');
     Route::get('/po-items/{purchaseOrder}', [MatchingController::class, 'getPoItems'])->name('matching.po_items');
     Route::post('/approve/{id}', [MatchingController::class, 'approvePayment'])->name('matching.approve');
+    Route::post('/cancel/{id}', [MatchingController::class, 'cancelTransaction'])->name('matching.cancel');
     Route::post('/run-matching', [MatchingController::class, 'runThreeWayMatching'])->name('matching.run_matching');
     Route::get('/details/{po_number}', [MatchingController::class, 'getMatchingDetails'])->name('matching.details');
     Route::post('/receive-goods', [MatchingController::class, 'storeGrn'])->name('matching.receive_goods');
