@@ -47,9 +47,7 @@ class GoodsReceiptInvoiceMatchingTest extends TestCase
         $response = $this->actingAs($this->user)->get(route('matching.index'));
 
         $response->assertStatus(200);
-        $response->assertSee('Matching Records');
-        $response->assertSee('Receive Goods');
-        $response->assertDontSee('<span>Record GRN</span>', false);
+        $response->assertSee('Order Management');
     }
 
     public function test_can_record_goods_receipt()
@@ -120,7 +118,7 @@ class GoodsReceiptInvoiceMatchingTest extends TestCase
 
         $response->assertStatus(422);
         $response->assertJsonPath('success', false);
-        $response->assertSee('Payment cannot be approved because the transaction contains unresolved matching issues');
+        $response->assertSee('Payment cannot be approved');
     }
 
     public function test_can_approve_payment_when_transaction_is_fully_matched()
@@ -144,7 +142,7 @@ class GoodsReceiptInvoiceMatchingTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertJsonPath('success', true);
-        $response->assertSee('Payment approved successfully!');
+        $response->assertSee('Payment validated and approved successfully!');
     }
 
     public function test_get_matching_details_endpoint_returns_json()

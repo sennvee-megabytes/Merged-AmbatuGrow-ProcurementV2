@@ -49,10 +49,6 @@
             <i data-lucide="file-text" class="w-4 h-4 mr-1"></i>
             <span>Create Requisition</span>
         </button>
-        <button @click="$dispatch('open-po-modal')" class="top-bar-btn bg-blue-600/80 hover:bg-blue-700/90 border-blue-500/30">
-            <i data-lucide="shopping-cart" class="w-4 h-4 mr-1"></i>
-            <span>Create PO</span>
-        </button>
     </div>
 @endsection
 

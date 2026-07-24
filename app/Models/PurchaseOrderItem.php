@@ -9,7 +9,7 @@ class PurchaseOrderItem extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['purchase_order_id','sku','name','quantity','unit_price','line_total'];
+    protected $fillable = ['purchase_order_id','sku','name','quantity','unit','unit_price','line_total'];
 
     public function purchaseOrder()
     {

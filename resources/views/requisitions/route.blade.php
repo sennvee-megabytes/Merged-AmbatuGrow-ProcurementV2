@@ -27,9 +27,9 @@ if (!$requisition) {
     die('Requisition not found.');
 }
 
-// Everyone who could be an approver (simple version: all users except requestor)
+// Only valid approver workers
 $approverOptions = $db->query(
-    "SELECT id, name, role FROM users WHERE id != {$requisition['requestor_id']} ORDER BY name"
+    "SELECT id, name, role FROM users WHERE username IN ('sarah.jenkins', 'finance.manager', 'johny.papa') OR name IN ('Sarah Jenkins', 'Michael Finn', 'Johny Papa') ORDER BY CASE WHEN username='sarah.jenkins' OR name='Sarah Jenkins' THEN 1 WHEN username='finance.manager' OR name='Michael Finn' THEN 2 ELSE 3 END"
 )->fetch_all(MYSQLI_ASSOC);
 
 $errors = [];

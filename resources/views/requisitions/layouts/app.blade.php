@@ -96,31 +96,52 @@
             </div>
         </div>
 
-        <nav class="flex-1 space-y-1">
+        <nav class="flex-1 space-y-1 overflow-y-auto no-scrollbar">
             <a href="{{ route('requisitions.create') }}" class="nav-item {{ request()->routeIs('requisitions.create') ? 'active' : '' }} flex items-center gap-3 px-3 py-2.5 rounded-md">
-                <i class="fa-solid fa-plus w-4 text-center"></i> Create PO
+                <i class="fa-solid fa-plus w-4 text-center"></i> Create Requisition
             </a>
-            <a href="{{ route('requisitions.tracking') }}" class="nav-item {{ request()->routeIs('requisitions.tracking') ? 'active' : '' }} flex items-center gap-3 px-3 py-2.5 rounded-md">
-                <i class="fa-solid fa-diagram-project w-4 text-center"></i> Tracking
+            <a href="{{ route('requisitions.tracking') }}" class="nav-item {{ request()->routeIs('requisitions.tracking') ? 'active' : '' }} flex items-center justify-between px-3 py-2.5 rounded-md">
+                <div class="flex items-center gap-3">
+                    <i class="fa-solid fa-diagram-project w-4 text-center"></i> Tracking
+                </div>
+                @if(($pendingApprovalCount ?? 0) > 0)
+                    <span class="px-2 py-0.5 text-[10px] font-extrabold rounded-full bg-red-600 text-white">
+                        {{ $pendingApprovalCount }}
+                    </span>
+                @endif
             </a>
-            <a href="{{ route('requisitions.tracking') }}" class="nav-item {{ request()->routeIs('requisitions.route*') ? 'active' : '' }} flex items-center gap-3 px-3 py-2.5 rounded-md">
-                <i class="fa-solid fa-cart-shopping w-4 text-center"></i> Order Management
+            <a href="{{ route('procurement.home') }}" class="nav-item {{ request()->routeIs('procurement.*') ? 'active' : '' }} flex items-center justify-between px-3 py-2.5 rounded-md">
+                <div class="flex items-center gap-3">
+                    <i class="fa-solid fa-cart-shopping w-4 text-center"></i> Order Management
+                </div>
+                @if(($pendingApprovalCount ?? 0) > 0)
+                    <span class="px-2 py-0.5 text-[10px] font-extrabold rounded-full bg-red-600 text-white">
+                        {{ $pendingApprovalCount }}
+                    </span>
+                @endif
             </a>
-            <a href="{{ route('approvals.index') }}" class="nav-item {{ request()->routeIs('approvals.*') ? 'active' : '' }} flex items-center gap-3 px-3 py-2.5 rounded-md">
-                <i class="fa-solid fa-square-check w-4 text-center"></i> Approvals
+            <a href="{{ route('approvals.index') }}" class="nav-item {{ request()->routeIs('approvals.*') ? 'active' : '' }} flex items-center justify-between px-3 py-2.5 rounded-md">
+                <div class="flex items-center gap-3">
+                    <i class="fa-solid fa-square-check w-4 text-center"></i> Approvals
+                </div>
+                @if(($pendingApprovalCount ?? 0) > 0)
+                    <span class="px-2 py-0.5 text-[10px] font-extrabold rounded-full bg-red-600 text-white">
+                        {{ $pendingApprovalCount }}
+                    </span>
+                @endif
             </a>
-            <a href="#" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-md">
-                <i class="fa-solid fa-file-invoice-dollar w-4 text-center"></i> Payments
+            <a href="{{ route('suppliers.index') }}" class="nav-item {{ request()->routeIs('suppliers.*') ? 'active' : '' }} flex items-center gap-3 px-3 py-2.5 rounded-md">
+                <i class="fa-solid fa-handshake w-4 text-center"></i> Suppliers
             </a>
         </nav>
 
-        <div class="space-y-1 pt-4 border-t border-white/10">
-            <a href="#" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-md">
-                <i class="fa-solid fa-gear w-4 text-center"></i> Settings
-            </a>
-            <a href="#" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-md">
-                <i class="fa-solid fa-circle-question w-4 text-center"></i> Support
-            </a>
+        <div class="space-y-1 pt-4 border-t border-white/10 shrink-0">
+            <form method="POST" action="{{ route('logout') }}" class="m-0 w-full">
+                @csrf
+                <button type="submit" class="nav-item text-red-200 hover:text-white hover:bg-red-900/50 flex items-center gap-3 px-3 py-2.5 rounded-md w-full text-left font-bold transition">
+                    <i class="fa-solid fa-right-from-bracket w-4 text-center text-red-300"></i> Log Out
+                </button>
+            </form>
         </div>
     </aside>
 

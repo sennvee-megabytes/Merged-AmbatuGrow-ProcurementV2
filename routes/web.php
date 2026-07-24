@@ -54,6 +54,8 @@ Route::prefix('order-management')->middleware(['auth'])->group(function () {
     Route::get('/createpo', [PurchaseOrderController::class, 'create'])->name('procurement.create');
 
     Route::post('/purchase-orders', [PurchaseOrderController::class, 'store'])->name('purchase_orders.store');
+    Route::get('/purchase-orders/{purchaseOrder}/pdf', [PurchaseOrderController::class, 'downloadPdf'])->name('purchase_orders.pdf');
+    Route::get('/purchase-orders/{purchaseOrder}/view-pdf', [PurchaseOrderController::class, 'streamPdf'])->name('purchase_orders.view_pdf');
     Route::post('/purchase-orders/{purchaseOrder}/send', [PurchaseOrderController::class, 'send'])->name('purchase_orders.send');
     Route::post('/purchase-orders/{purchaseOrder}/status', [PurchaseOrderController::class, 'updateStatus'])->name('purchase_orders.status');
     Route::post('/match-invoice', [PurchaseOrderController::class, 'matchInvoice'])->name('purchase_orders.match_invoice');
@@ -68,6 +70,8 @@ Route::prefix('purchase-and-requisition')->middleware(['auth', 'approver'])->gro
         Route::get('/', [RequisitionController::class, 'tracking'])->name('requisitions.tracking');
         Route::get('/create', [RequisitionController::class, 'create'])->name('requisitions.create');
         Route::post('/', [RequisitionController::class, 'store'])->name('requisitions.store');
+        Route::get('/{requisition}/receipt', [RequisitionController::class, 'showReceipt'])->name('requisitions.receipt');
+        Route::get('/{requisition}/receipt-pdf', [RequisitionController::class, 'downloadReceiptPdf'])->name('requisitions.receipt_pdf');
         Route::get('/{requisition}/route', [RequisitionController::class, 'showRoute'])->name('requisitions.route');
         Route::post('/{requisition}/route', [RequisitionController::class, 'storeRoute'])->name('requisitions.route.store');
     });
