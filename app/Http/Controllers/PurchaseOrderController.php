@@ -41,7 +41,7 @@ class PurchaseOrderController extends Controller
             ];
         })->values();
 
-        return view('orders::procurement', compact('purchaseOrders', 'suppliers', 'stats', 'invoices', 'spendData'));
+        return view('purchase_orders.procurement', compact('purchaseOrders', 'suppliers', 'stats', 'invoices', 'spendData'));
     }
 
     public function create()
@@ -59,7 +59,7 @@ class PurchaseOrderController extends Controller
             })->count(),
         ];
 
-        return view('orders::createpo', compact('suppliers', 'purchaseOrders', 'stats'));
+        return view('purchase_orders.createpo', compact('suppliers', 'purchaseOrders', 'stats'));
     }
 
     public function store(Request $request)

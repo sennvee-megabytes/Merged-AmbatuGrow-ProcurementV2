@@ -21,10 +21,14 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $moduleViewPaths = [
-            'grim' => resource_path('views/grim'),
-            'orders' => resource_path('views'),
+            'grim' => resource_path('views/matching'),
+            'matching' => resource_path('views/matching'),
+            'orders' => resource_path('views/purchase_orders'),
+            'purchase_orders' => resource_path('views/purchase_orders'),
             'requisitions' => resource_path('views/requisitions'),
             'suppliers' => resource_path('views/suppliers'),
+            'dashboard' => resource_path('views/dashboard'),
+            'schema' => resource_path('views/schema'),
         ];
 
         foreach ($moduleViewPaths as $namespace => $path) {

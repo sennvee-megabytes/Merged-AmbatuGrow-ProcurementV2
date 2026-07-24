@@ -798,7 +798,7 @@ class MatchingController extends Controller
             ]);
         }
 
-        return view('grim::dashboard', [
+        return view('matching.dashboard', [
             'records' => array_values($filteredData),
             'allRecords' => $allData,
             'suppliers' => $suppliersList,

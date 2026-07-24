@@ -95,6 +95,6 @@ class ErDiagramController extends Controller
             ];
         }
 
-        return view('erd-schema', compact('schemaData'));
+        return view('schema.erd-schema', compact('schemaData'));
     }
 }

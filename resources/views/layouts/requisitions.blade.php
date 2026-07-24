@@ -147,7 +147,7 @@
 
     {{-- Main --}}
     <div class="flex-1 min-h-screen flex flex-col">
-        @include('partials.topbar')
+        @include('partials.requisitions-topbar')
 
         <main class="flex-1 p-6">
             @if (session('status'))
