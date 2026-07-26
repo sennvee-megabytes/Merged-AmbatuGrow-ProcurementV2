@@ -429,9 +429,136 @@
                 padding-right: 18px;
             }
 
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
+        /* Dark Mode Overrides for Procurement Landing */
+        .dark .page-section,
+        .dark #purchase.page-section,
+        .dark #sidenotif.page-section {
+            background: #1e293b !important;
+            border-color: #334155 !important;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4) !important;
+        }
+
+        .dark .page-section-header {
+            border-bottom-color: #334155 !important;
+        }
+
+        .dark .page-section-header h2 { color: #f8fafc !important; }
+        .dark .page-section-header p { color: #94a3b8 !important; }
+
+        .dark .stat-card {
+            background: #0f172a !important;
+            border-color: #334155 !important;
+        }
+
+        .dark .stat-label { color: #94a3b8 !important; }
+        .dark .stat-value { color: #f8fafc !important; }
+
+        .dark .bg-white {
+            background-color: #1e293b !important;
+            border-color: #334155 !important;
+            color: #f8fafc !important;
+        }
+
+        .dark .tab {
+            background: #0f172a !important;
+            border-color: #334155 !important;
+            color: #94a3b8 !important;
+        }
+
+        .dark .tab.active {
+            background: rgba(30, 125, 67, 0.25) !important;
+            border-color: #1e7d43 !important;
+            color: #34d399 !important;
+        }
+
+        .dark .table-wrap {
+            background: #1e293b !important;
+            border-color: #334155 !important;
+        }
+
+        .dark .table-wrap thead th {
+            background: #0f172a !important;
+            color: #cbd5e1 !important;
+            border-bottom-color: #334155 !important;
+        }
+
+        .dark .table-wrap tbody tr,
+        .dark .table-wrap tbody td,
+        .dark .unified-table tbody tr,
+        .dark .unified-table tbody td,
+        .dark .po-row,
+        .dark .po-row td {
+            background-color: #1e293b !important;
+            color: #cbd5e1 !important;
+            border-bottom-color: #334155 !important;
+        }
+
+        .dark .table-wrap tbody tr:hover td,
+        .dark .unified-table tbody tr:hover td,
+        .dark .po-row:hover td {
+            background-color: #26334d !important;
+        }
+
+        .dark .po-row-overdue td {
+            background-color: rgba(239, 68, 68, 0.12) !important;
+        }
+
+        .dark .mini-card,
+        .dark .chart-card,
+        .dark .log-item {
+            background: #0f172a !important;
+            border-color: #334155 !important;
+            color: #f8fafc !important;
+        }
+
+        .dark .mini-title { color: #34d399 !important; }
+        .dark .log-item strong { color: #f8fafc !important; }
+        .dark .muted { color: #94a3b8 !important; }
+        .dark .po-row td[style*="font-weight: 700"],
+        .dark .po-row td[style*="color: #165c32"] {
+            color: #f8fafc !important;
+        }
+
+        .dark .btn-soft {
+            background: #0f172a !important;
+            color: #cbd5e1 !important;
+            border-color: #334155 !important;
+        }
+
+        .dark .btn-ghost {
+            background: rgba(30, 125, 67, 0.2) !important;
+            color: #34d399 !important;
+            border-color: rgba(30, 125, 67, 0.4) !important;
+        }
+
+        .dark .btn-outline-green {
+            background: #1e293b !important;
+            color: #34d399 !important;
+            border-color: #1e7d43 !important;
+        }
+
+        .dark .btn-outline-red {
+            background: #1e293b !important;
+            color: #f87171 !important;
+            border-color: #ef4444 !important;
+        }
+
+        .dark .modal {
+            background: #1e293b !important;
+            border-color: #334155 !important;
+            color: #f8fafc !important;
+        }
+
+        .dark .text-slate-800,
+        .dark .text-slate-900 { color: #f8fafc !important; }
+        .dark .text-slate-600,
+        .dark .text-slate-700 { color: #cbd5e1 !important; }
+        .dark .text-slate-500,
+        .dark .text-slate-400 { color: #94a3b8 !important; }
+        .dark select#po-sort-select {
+            background-color: #0f172a !important;
+            color: #f8fafc !important;
+            border-color: #334155 !important;
         }
     </style>
 
@@ -520,13 +647,13 @@
 
                 <!-- Spend & Status Analytics Charts -->
                 <div class="analytics-section" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; margin: 24px 0;">
-                    <div style="background: #ffffff; border: 1px solid var(--border); border-radius: 18px; padding: 22px; box-shadow: var(--shadow);">
+                    <div class="chart-card" style="border: 1px solid var(--border); border-radius: 18px; padding: 22px; box-shadow: var(--shadow);">
                         <div class="mini-title" style="margin-bottom:16px; font-weight:800; font-size:13px; color:var(--brand-dark);">Supplier Spend Distribution (₱)</div>
                         <div style="height: 220px; position: relative;">
                             <canvas id="spendChart"></canvas>
                         </div>
                     </div>
-                    <div style="background: #ffffff; border: 1px solid var(--border); border-radius: 18px; padding: 22px; box-shadow: var(--shadow); display: flex; flex-direction: column;">
+                    <div class="chart-card" style="border: 1px solid var(--border); border-radius: 18px; padding: 22px; box-shadow: var(--shadow); display: flex; flex-direction: column;">
                         <div class="mini-title" style="margin-bottom:16px; font-weight:800; font-size:13px; color:var(--brand-dark);">Order Status Allocation</div>
                         <div style="height: 220px; position: relative; display: flex; justify-content: center; align-items: center; flex:1;">
                             <canvas id="statusChart" style="max-height: 180px; max-width: 180px;"></canvas>
@@ -902,7 +1029,7 @@
                                 @foreach($purchaseOrders as $po)
                                     @if($po->status !== 'received' && $po->expected_delivery && $po->expected_delivery->isPast())
                                         @php $alertCount++; @endphp
-                                        <div class="log-item" style="border-left: 3px solid #dc2626; background: #fffdfd;">
+                                        <div class="log-item" style="border-left: 3px solid #dc2626;">
                                             <strong style="color: #b91c1c;">⚠️ {{ $po->po_number }} Overdue</strong>
                                             <div class="muted" style="font-size:12px;">{{ $po->supplier->name ?? '—' }}</div>
                                             <div style="font-size:11px; margin-top:4px;">Expected: {{ $po->expected_delivery->format('M d, Y') }}</div>

@@ -67,6 +67,21 @@
             margin-left: 4px;
             font-style: italic;
         }
+        .dark .table-card-unified {
+            background: #161e2e !important;
+            border-color: #1e293b !important;
+        }
+        .dark .table-header-custom {
+            background: #0f172a !important;
+            border-bottom-color: #1e293b !important;
+        }
+        .dark .column-badge {
+            background: #0b0f17 !important;
+            color: #cbd5e1 !important;
+        }
+        .dark .column-badge-type {
+            color: #94a3b8 !important;
+        }
     </style>
 @endpush
 

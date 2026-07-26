@@ -190,15 +190,21 @@
         align-items: center;
         flex: 1;
         min-width: 200px;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
     }
 
     .search-box .search-icon {
         position: absolute;
         left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
         width: 16px;
         height: 16px;
         color: #94a3b8;
         pointer-events: none;
+        z-index: 10;
     }
 
     .search-box input {
@@ -1225,6 +1231,293 @@
     .available-po-card.selected {
         border-color: #15803d;
         background-color: #f0fdf4;
+    }
+
+    /* ========================================================= */
+    /*  GOODS RECEIPT & INVOICE MATCHING DARK MODE OVERRIDES     */
+    /* ========================================================= */
+    .dark .grim-page {
+        background-color: #0b0f17 !important;
+        color: #f8fafc !important;
+    }
+    .dark .kpi-card {
+        background-color: #161e2e !important;
+        border-color: #1e293b !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
+    }
+    .dark .kpi-icon-wrapper {
+        background-color: rgba(16, 185, 129, 0.15) !important;
+        color: #34d399 !important;
+    }
+    .dark .kpi-card:nth-child(2) .kpi-icon-wrapper { background-color: rgba(16, 185, 129, 0.15) !important; color: #34d399 !important; }
+    .dark .kpi-card:nth-child(3) .kpi-icon-wrapper { background-color: rgba(59, 130, 246, 0.15) !important; color: #60a5fa !important; }
+    .dark .kpi-card:nth-child(4) .kpi-icon-wrapper { background-color: rgba(239, 68, 68, 0.15) !important; color: #f87171 !important; }
+
+    .dark .trend-up { background-color: rgba(16, 185, 129, 0.15) !important; color: #34d399 !important; }
+    .dark .trend-down { background-color: rgba(59, 130, 246, 0.15) !important; color: #60a5fa !important; }
+    .dark .trend-mismatch { background-color: rgba(239, 68, 68, 0.15) !important; color: #f87171 !important; }
+
+    .dark .kpi-value { color: #f8fafc !important; }
+    .dark .kpi-title { color: #cbd5e1 !important; }
+    .dark .kpi-subtext { color: #94a3b8 !important; }
+
+    .dark .toolbar-card {
+        background-color: #161e2e !important;
+        border-color: #1e293b !important;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.2) !important;
+    }
+    .search-box:focus-within,
+    .dark .search-box,
+    .dark .search-box:focus-within {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        outline: none !important;
+    }
+    .dark .search-box input, .dark .supplier-box select {
+        background-color: #0f172a !important;
+        color: #f8fafc !important;
+        border-color: #334155 !important;
+    }
+    .dark .search-box input:focus {
+        border-color: #34d399 !important;
+        box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.18) !important;
+    }
+    .dark .search-box input::placeholder { color: #64748b !important; }
+    .dark .search-box .search-icon, .dark .supplier-box .select-chevron { color: #94a3b8 !important; }
+
+    .dark .status-tabs-container {
+        background-color: #0b0f17 !important;
+        border: 1px solid #1e293b !important;
+    }
+    .dark .status-tab { color: #94a3b8 !important; }
+    .dark .status-tab:hover:not(.active) { color: #f8fafc !important; }
+    .dark .status-tab.active {
+        background-color: #1e293b !important;
+        color: #34d399 !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4) !important;
+    }
+
+    .dark .btn-toolbar, .dark .btn-toolbar-icon {
+        background-color: #1e293b !important;
+        color: #cbd5e1 !important;
+        border-color: #334155 !important;
+    }
+    .dark .btn-toolbar:hover, .dark .btn-toolbar-icon:hover {
+        background-color: #334155 !important;
+        color: #ffffff !important;
+        border-color: #475569 !important;
+    }
+    .dark .btn-toolbar i, .dark .btn-toolbar-icon i { color: #cbd5e1 !important; }
+
+    .dark .table-card {
+        background-color: #161e2e !important;
+        border-color: #1e293b !important;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.2) !important;
+    }
+    .dark .table-header-row h3 { color: #f8fafc !important; }
+    .dark .table-header-row p { color: #94a3b8 !important; }
+
+    .dark .records-table th {
+        background-color: #0f172a !important;
+        color: #cbd5e1 !important;
+        border-bottom: 1px solid #1e293b !important;
+    }
+    .dark .records-table td {
+        color: #e2e8f0 !important;
+        border-bottom: 1px solid #1e293b !important;
+    }
+    .dark .records-table tr:hover {
+        background-color: rgba(30, 41, 59, 0.5) !important;
+    }
+    .dark .records-table tr.selected {
+        background-color: rgba(16, 185, 129, 0.15) !important;
+    }
+
+    .dark .col-po, .dark .col-amount { color: #f8fafc !important; }
+    .dark .sub-info { color: #94a3b8 !important; }
+    .dark .variance-mismatch { color: #f87171 !important; }
+    .dark .variance-partial { color: #fbbf24 !important; }
+
+    .dark .badge-matched { background-color: rgba(16, 185, 129, 0.15) !important; color: #34d399 !important; border: 1px solid rgba(16, 185, 129, 0.3) !important; }
+    .dark .badge-partial { background-color: rgba(245, 158, 11, 0.15) !important; color: #fbbf24 !important; border: 1px solid rgba(245, 158, 11, 0.3) !important; }
+    .dark .badge-mismatch { background-color: rgba(239, 68, 68, 0.15) !important; color: #f87171 !important; border: 1px solid rgba(239, 68, 68, 0.3) !important; }
+    .dark .badge-pending { background-color: rgba(14, 165, 233, 0.15) !important; color: #38bdf8 !important; border: 1px solid rgba(14, 165, 233, 0.3) !important; }
+    .dark .badge-cancelled { background-color: #1e293b !important; color: #94a3b8 !important; border: 1px solid #334155 !important; }
+
+    .dark .table-footer { border-top-color: #1e293b !important; }
+    .dark .pagination-info { color: #94a3b8 !important; }
+    .dark .page-link {
+        background-color: #1e293b !important;
+        color: #cbd5e1 !important;
+        border-color: #334155 !important;
+    }
+    .dark .page-link:hover:not(.disabled):not(.active) {
+        background-color: #334155 !important;
+        color: #34d399 !important;
+        border-color: #475569 !important;
+    }
+    .dark .page-link.active {
+        background-color: #1e7d43 !important;
+        color: #ffffff !important;
+        border-color: #1e7d43 !important;
+    }
+
+    .dark .matching-summary-panel {
+        background-color: #161e2e !important;
+        border-left-color: #1e293b !important;
+        box-shadow: -4px 0 25px rgba(0,0,0,0.5) !important;
+    }
+    .dark .summary-header { border-bottom-color: #1e293b !important; }
+    .dark .summary-header h3 { color: #f8fafc !important; }
+    .dark .summary-header p { color: #94a3b8 !important; }
+    .dark .close-btn { color: #94a3b8 !important; }
+    .dark .close-btn:hover { color: #ffffff !important; }
+    .dark .summary-section-title { color: #94a3b8 !important; }
+
+    .dark .supplier-card {
+        background-color: #0b0f17 !important;
+        border: 1px solid #1e293b !important;
+    }
+    .dark .supplier-name { color: #f8fafc !important; }
+    .dark .supplier-commodity { color: #94a3b8 !important; }
+    .dark .detail-label { color: #94a3b8 !important; }
+    .dark .detail-value { color: #f8fafc !important; }
+
+    .dark .doc-item { border-bottom-color: #1e293b !important; }
+    .dark .doc-name { color: #94a3b8 !important; }
+    .dark .doc-id { color: #f8fafc !important; }
+
+    .dark .date-po { background-color: rgba(16, 185, 129, 0.15) !important; color: #34d399 !important; }
+    .dark .date-grn { background-color: rgba(14, 165, 233, 0.15) !important; color: #38bdf8 !important; }
+    .dark .date-inv { background-color: rgba(168, 85, 247, 0.15) !important; color: #c084fc !important; }
+    .dark .date-missing { background-color: #1e293b !important; color: #64748b !important; }
+
+    .dark .recon-label { color: #94a3b8 !important; }
+    .dark .recon-value { color: #f8fafc !important; }
+    .dark .progress-bar-bg { background-color: #1e293b !important; }
+
+    .dark .alert-reconciled { background-color: rgba(16, 185, 129, 0.12) !important; color: #34d399 !important; border-color: rgba(16, 185, 129, 0.3) !important; }
+    .dark .alert-variance { background-color: rgba(245, 158, 11, 0.12) !important; color: #fbbf24 !important; border-color: rgba(245, 158, 11, 0.3) !important; }
+    .dark .alert-mismatch { background-color: rgba(239, 68, 68, 0.12) !important; color: #f87171 !important; border-color: rgba(239, 68, 68, 0.3) !important; }
+
+    .dark .payment-due-label { color: #94a3b8 !important; }
+    .dark .summary-footer { border-top-color: #1e293b !important; background-color: #161e2e !important; }
+
+    .dark .btn-action-credit-orange {
+        background-color: #161e2e !important;
+        color: #fb923c !important;
+        border-color: #fb923c !important;
+    }
+    .dark .btn-action-credit-orange:hover { background-color: rgba(251, 146, 60, 0.15) !important; }
+
+    .dark .btn-action-credit-red {
+        background-color: #161e2e !important;
+        color: #f87171 !important;
+        border-color: #f87171 !important;
+    }
+    .dark .btn-action-credit-red:hover { background-color: rgba(239, 68, 68, 0.15) !important; }
+
+    .dark .btn-action-reminder {
+        background-color: #161e2e !important;
+        color: #34d399 !important;
+        border-color: rgba(16, 185, 129, 0.3) !important;
+    }
+    .dark .btn-action-reminder:hover { background-color: rgba(16, 185, 129, 0.15) !important; }
+
+    .dark .modal-card {
+        background-color: #161e2e !important;
+        border-color: #1e293b !important;
+        color: #f8fafc !important;
+    }
+    .dark .modal-header, .dark .modal-footer {
+        background-color: #0f172a !important;
+        border-color: #1e293b !important;
+    }
+    .dark .modal-header h3 { color: #f8fafc !important; }
+    .dark .form-group label { color: #cbd5e1 !important; }
+    .dark .form-control {
+        background-color: #0b0f17 !important;
+        color: #f8fafc !important;
+        border-color: #334155 !important;
+    }
+    .dark .btn-secondary {
+        background-color: #1e293b !important;
+        color: #cbd5e1 !important;
+        border-color: #334155 !important;
+    }
+
+    .dark .record-grn-wrapper {
+        background-color: #090d16 !important;
+        color: #f8fafc !important;
+    }
+    .dark .grn-header-row,
+    .dark .grn-main-card {
+        background-color: #1e293b !important;
+        border-color: #334155 !important;
+    }
+    .dark .grn-header-row h2 { color: #f8fafc !important; }
+    .dark .grn-header-row p { color: #94a3b8 !important; }
+    .dark .btn-back-matching {
+        background-color: #0f172a !important;
+        color: #cbd5e1 !important;
+        border-color: #334155 !important;
+    }
+    .dark .receipt-type-selector {
+        background-color: #0f172a !important;
+        border-color: #334155 !important;
+    }
+    .dark .receipt-type-btn {
+        color: #cbd5e1 !important;
+    }
+    .dark .receipt-type-btn.active {
+        background-color: #1e293b !important;
+        color: #34d399 !important;
+        border-color: #34d399 !important;
+    }
+    .dark .receipt-lines-card {
+        background-color: #0f172a !important;
+        border-color: #334155 !important;
+    }
+    .dark .receipt-lines-table th {
+        background-color: #0f172a !important;
+        color: #cbd5e1 !important;
+        border-bottom-color: #334155 !important;
+    }
+    .dark .receipt-lines-table td {
+        color: #e2e8f0 !important;
+        border-bottom-color: #334155 !important;
+    }
+    .dark #live-matching-card {
+        background-color: #0f172a !important;
+        border-color: #334155 !important;
+        color: #f8fafc !important;
+    }
+    .dark .grn-side-card > div[style*="background"] {
+        background-color: #1e293b !important;
+        border-color: #334155 !important;
+        color: #f8fafc !important;
+    }
+    .dark .available-po-card {
+        background-color: #0f172a !important;
+        border-color: #334155 !important;
+        color: #f8fafc !important;
+    }
+    .dark .available-po-card [style*="color:#1e293b"],
+    .dark .available-po-card [style*="color:#334155"] {
+        color: #f8fafc !important;
+    }
+    .dark .available-po-card [style*="color:#64748b"] {
+        color: #94a3b8 !important;
+    }
+    .dark .available-po-card.selected {
+        background-color: rgba(16, 185, 129, 0.15) !important;
+        border-color: #34d399 !important;
+    }
+    .dark #live-discrepancy-box.alert-reconciled {
+        background-color: rgba(245, 158, 11, 0.12) !important;
+        color: #fbbf24 !important;
+        border-color: rgba(245, 158, 11, 0.3) !important;
     }
 </style>
 @endpush

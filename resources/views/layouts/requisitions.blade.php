@@ -5,6 +5,15 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <script>
+        (function() {
+            if (localStorage.getItem('dark_mode') === 'true') {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        })();
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'AMBATUGROW ERP') · Purchase Requisition & Approval</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -79,6 +88,24 @@
         ::-webkit-scrollbar{ width:8px; height:8px; }
         ::-webkit-scrollbar-thumb{ background:#c9ccd1; border-radius:8px; }
         [x-cloak]{ display:none !important; }
+
+        /* Dark Mode Design System Support */
+        .dark body { background: #090d16 !important; color: #f8fafc !important; }
+        .dark .card { background: #1e293b !important; border-color: #334155 !important; color: #f8fafc !important; }
+        .dark .sidebar { background: #0f172a !important; border-right: 1px solid #334155; }
+        .dark .nav-item { color: #cbd5e1; }
+        .dark .nav-item:hover { background: #334155; color: #ffffff; }
+        .dark .nav-item.active { background: #1e7d43; color: #ffffff; }
+        .dark input:not([type="checkbox"]):not([type="radio"]),
+        .dark select,
+        .dark textarea { background: #0f172a !important; color: #f8fafc !important; border-color: #334155 !important; }
+        .dark input::placeholder, .dark textarea::placeholder { color: #64748b !important; }
+        .dark input:focus, .dark select:focus, .dark textarea:focus { border-color: #34d399 !important; box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.18) !important; }
+        .dark table th { background: #0f172a !important; color: #cbd5e1 !important; border-bottom: 2px solid #334155 !important; }
+        .dark table td { color: #e2e8f0 !important; border-bottom: 1px solid #334155 !important; }
+        .dark tr:hover td { background: #26334d !important; }
+        .dark ::-webkit-scrollbar-thumb { background: #334155 !important; }
+        .dark ::-webkit-scrollbar-track { background: #090d16 !important; }
     </style>
     @stack('styles')
 </head>

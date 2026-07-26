@@ -28,7 +28,7 @@
             text-transform: uppercase !important;
             letter-spacing: 0.5px !important;
             border-bottom: 1px solid #e5e7eb !important;
-            background: #ffffff !important;
+            background: #ffffff;
             white-space: nowrap !important;
         }
         .fig-table td {
@@ -39,6 +39,70 @@
         }
         .fig-table tr:hover td {
             background-color: #fafafa !important;
+        }
+
+        .dark .fig-table th {
+            background: #0f172a !important;
+            color: #cbd5e1 !important;
+            border-bottom-color: #334155 !important;
+        }
+        .dark .fig-table td {
+            color: #e2e8f0 !important;
+            border-bottom-color: #334155 !important;
+        }
+        .dark .fig-table tr:hover td {
+            background-color: #26334d !important;
+        }
+        .dark .kpi-card {
+            background-color: #1e293b !important;
+            border-color: #334155 !important;
+        }
+        .dark .kpi-value {
+            color: #f8fafc !important;
+        }
+        .dark .kpi-title {
+            color: #cbd5e1 !important;
+        }
+        .dark .kpi-subtext {
+            color: #94a3b8 !important;
+        }
+        .dark .unified-card {
+            background-color: #1e293b !important;
+            border-color: #334155 !important;
+            color: #f8fafc !important;
+        }
+        .dark .bg-slate-50\/50,
+        .dark .bg-slate-50\/80 {
+            background-color: #0f172a !important;
+            border-color: #334155 !important;
+        }
+        .dark .bg-green-800\/5 {
+            background-color: rgba(30, 125, 67, 0.15) !important;
+            border-color: rgba(30, 125, 67, 0.3) !important;
+        }
+        .dark .text-green-900,
+        .dark .text-green-950 {
+            color: #34d399 !important;
+        }
+        .dark .divide-slate-100\/60 > * + * {
+            border-color: #334155 !important;
+        }
+        .dark .text-slate-800,
+        .dark .text-slate-700 {
+            color: #f8fafc !important;
+        }
+        .dark .text-slate-500,
+        .dark .text-slate-400 {
+            color: #94a3b8 !important;
+        }
+        .dark input, .dark select, .dark textarea {
+            background-color: #0f172a !important;
+            color: #f8fafc !important;
+            border-color: #334155 !important;
+        }
+        .dark option {
+            background-color: #1e293b !important;
+            color: #f8fafc !important;
         }
     </style>
 @endpush
@@ -58,44 +122,44 @@
     {{-- Stat cards --}}
     <div class="kpi-grid" style="grid-template-columns: repeat(3, minmax(0, 1fr)) !important; margin-bottom: 24px; width: 100%; gap: 16px;">
         <!-- Card 1 -->
-        <div class="kpi-card border-l-4 border-blue-500 bg-white" style="min-height: 130px; display: flex; flex-direction: column; justify-content: space-between; padding: 18px 20px;">
+        <div class="kpi-card border-l-4 border-blue-500" style="min-height: 130px; display: flex; flex-direction: column; justify-content: space-between; padding: 18px 20px;">
             <div class="kpi-header" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: auto;">
                 <div class="kpi-icon-wrapper" style="width: 40px; height: 40px; border-radius: 8px; background-color: #eff6ff; color: #3b82f6; display: flex; align-items: center; justify-content: center;">
                     <i data-lucide="clock" style="width:20px;height:20px;"></i>
                 </div>
             </div>
             <div class="kpi-body" style="display: flex; flex-direction: column; gap: 2px; margin-top: 12px;">
-                <div class="kpi-value" style="font-size: 2.25rem; font-weight: 800; line-height: 1; color: #111827;">{{ $stats['pending_count'] }}</div>
-                <div class="kpi-title" style="font-size: 0.75rem; font-weight: 500; color: #6b7280; margin: 0; line-height: 1.2;">Pending Approvals</div>
-                <div class="kpi-subtext" style="font-size: 0.65rem; font-weight: 700; color: #9ca3af; text-transform: uppercase; tracking-wider; margin: 0; line-height: 1.2;">Awaiting your action</div>
+                <div class="kpi-value" style="font-size: 2.25rem; font-weight: 800; line-height: 1;">{{ $stats['pending_count'] }}</div>
+                <div class="kpi-title" style="font-size: 0.75rem; font-weight: 500; margin: 0; line-height: 1.2;">Pending Approvals</div>
+                <div class="kpi-subtext" style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; tracking-wider; margin: 0; line-height: 1.2;">Awaiting your action</div>
             </div>
         </div>
 
         <!-- Card 2 -->
-        <div class="kpi-card border-l-4 border-emerald-500 bg-white" style="min-height: 130px; display: flex; flex-direction: column; justify-content: space-between; padding: 18px 20px;">
+        <div class="kpi-card border-l-4 border-emerald-500" style="min-height: 130px; display: flex; flex-direction: column; justify-content: space-between; padding: 18px 20px;">
             <div class="kpi-header" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: auto;">
                 <div class="kpi-icon-wrapper" style="width: 40px; height: 40px; border-radius: 8px; background-color: #ecfdf5; color: #10b981; display: flex; align-items: center; justify-content: center;">
                     <i data-lucide="dollar-sign" style="width:20px;height:20px;"></i>
                 </div>
             </div>
             <div class="kpi-body" style="display: flex; flex-direction: column; gap: 2px; margin-top: 12px;">
-                <div class="kpi-value" style="font-size: 2.25rem; font-weight: 800; line-height: 1; color: #111827;">₱{{ number_format($stats['value_awaiting'], 0) }}</div>
-                <div class="kpi-title" style="font-size: 0.75rem; font-weight: 500; color: #6b7280; margin: 0; line-height: 1.2;">Value Awaiting Approval</div>
-                <div class="kpi-subtext" style="font-size: 0.65rem; font-weight: 700; color: #9ca3af; text-transform: uppercase; tracking-wider; margin: 0; line-height: 1.2;">Across your queue</div>
+                <div class="kpi-value" style="font-size: 2.25rem; font-weight: 800; line-height: 1;">₱{{ number_format($stats['value_awaiting'], 0) }}</div>
+                <div class="kpi-title" style="font-size: 0.75rem; font-weight: 500; margin: 0; line-height: 1.2;">Value Awaiting Approval</div>
+                <div class="kpi-subtext" style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; tracking-wider; margin: 0; line-height: 1.2;">Across your queue</div>
             </div>
         </div>
 
         <!-- Card 3 -->
-        <div class="kpi-card border-l-4 border-amber-500 bg-white" style="min-height: 130px; display: flex; flex-direction: column; justify-content: space-between; padding: 18px 20px;">
+        <div class="kpi-card border-l-4 border-amber-500" style="min-height: 130px; display: flex; flex-direction: column; justify-content: space-between; padding: 18px 20px;">
             <div class="kpi-header" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: auto;">
                 <div class="kpi-icon-wrapper" style="width: 40px; height: 40px; border-radius: 8px; background-color: #fef3c7; color: #d97706; display: flex; align-items: center; justify-content: center;">
                     <i data-lucide="shield-check" style="width:20px;height:20px;"></i>
                 </div>
             </div>
             <div class="kpi-body" style="display: flex; flex-direction: column; gap: 2px; margin-top: 12px;">
-                <div class="kpi-value" style="font-size: 1.25rem; font-weight: 800; line-height: 1.2; color: #111827; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;">{{ auth()->user()->roleLabel() }}</div>
-                <div class="kpi-title" style="font-size: 0.75rem; font-weight: 500; color: #6b7280; margin: 0; line-height: 1.2;">Your Role</div>
-                <div class="kpi-subtext" style="font-size: 0.65rem; font-weight: 700; color: #9ca3af; text-transform: uppercase; tracking-wider; margin: 0; line-height: 1.2;">{{ auth()->user()->department }}</div>
+                <div class="kpi-value" style="font-size: 1.25rem; font-weight: 800; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;">{{ auth()->user()->roleLabel() }}</div>
+                <div class="kpi-title" style="font-size: 0.75rem; font-weight: 500; margin: 0; line-height: 1.2;">Your Role</div>
+                <div class="kpi-subtext" style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; tracking-wider; margin: 0; line-height: 1.2;">{{ auth()->user()->department }}</div>
             </div>
         </div>
     </div>
