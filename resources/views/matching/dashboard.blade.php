@@ -554,6 +554,69 @@
 
     .status-badge i { width: 13px; height: 13px; }
 
+    /* Searchable Autocomplete Styles (Floating Overlay) */
+    .autocomplete-dropdown {
+        position: fixed;
+        max-height: 220px;
+        overflow-y: auto;
+        background: #ffffff;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        z-index: 999999;
+        font-size: 0.75rem;
+        box-sizing: border-box;
+    }
+
+    .autocomplete-item {
+        padding: 7px 10px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        color: #1e293b;
+        border-bottom: 1px solid #f1f5f9;
+        transition: background-color 0.1s ease;
+    }
+
+    .autocomplete-item:last-child {
+        border-bottom: none;
+    }
+
+    .autocomplete-item:hover, .autocomplete-item.active {
+        background-color: #f0fdf4;
+        color: #15803d;
+    }
+
+    .autocomplete-item .item-price {
+        font-weight: 600;
+        color: #059669;
+        font-size: 0.72rem;
+    }
+
+    .autocomplete-custom-item {
+        background-color: #f8fafc;
+        color: #166534;
+        font-weight: 600;
+        border-top: 1px dashed #cbd5e1;
+    }
+
+    .autocomplete-custom-item:hover, .autocomplete-custom-item.active {
+        background-color: #dcfce7;
+        color: #15803d;
+    }
+
+    /* Enforce Read-Only Rules for Transaction Table & Summary Panel */
+    .matching-table td {
+        user-select: text;
+        cursor: pointer;
+    }
+    .matching-summary-panel .detail-value,
+    .matching-summary-panel .recon-value,
+    .matching-summary-panel .doc-id {
+        user-select: text;
+    }
+
     /* Table Footer & Pagination */
     .table-footer {
         display: flex;
@@ -1667,14 +1730,15 @@
                         <table class="records-table">
                             <thead>
                                 <tr>
-                                    <th style="width: 14%;">PO Number</th>
-                                    <th style="width: 22%;">Supplier / Commodity</th>
-                                    <th style="width: 14%;">GRN Number</th>
-                                    <th style="width: 14%;">Invoice Number</th>
-                                    <th style="width: 11%;">PO Amount</th>
-                                    <th style="width: 11%;">Invoice Amount</th>
-                                    <th style="width: 8%;">Variance</th>
-                                    <th style="width: 12%;">Status</th>
+                                    <th style="width: 12%;">PO Number</th>
+                                    <th style="width: 17%;">Supplier / Commodity</th>
+                                    <th style="width: 11%;">GRN Number</th>
+                                    <th style="width: 11%;">Invoice Number</th>
+                                    <th style="width: 10%;">PO Amount</th>
+                                    <th style="width: 10%;">Invoice Amount</th>
+                                    <th style="width: 7%;">Variance</th>
+                                    <th style="width: 10%;">Status</th>
+                                    <th style="width: 12%;">Created</th>
                                 </tr>
                             </thead>
                             <tbody id="records-tbody">
@@ -1736,7 +1800,7 @@
                                 </div>
                                 <div class="form-group">
                                     <label id="lbl-grn-number">GRN NUMBER</label>
-                                    <input type="text" id="grn-number-input" name="grn_number" class="form-control" value="GRN-2024-03401" required>
+                                    <input type="text" id="grn-number-input" class="form-control" value="Auto-generated upon submission" style="background-color:#f8fafc; font-style:italic; color:#64748b;" readonly>
                                 </div>
                                 <div class="form-group">
                                     <label id="lbl-received-at">RECEIVED AT</label>
@@ -1856,17 +1920,32 @@
                         </div>
 
                         <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:16px;">
-                            <div style="font-size:0.85rem; font-weight:700; color:#334155; margin-bottom:12px;">Available POs</div>
+                            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+                                <div style="font-size:0.85rem; font-weight:700; color:#334155;">Available POs</div>
+                                <span id="available-pos-count" style="font-size:0.72rem; font-weight:600; background:#f1f5f9; color:#475569; padding:2px 8px; border-radius:12px;">{{ count($availablePos) }}</span>
+                            </div>
+
+                            <!-- Real-time Search Field -->
+                            <div style="position:relative; margin-bottom:12px;">
+                                <i data-lucide="search" style="position:absolute; left:10px; top:50%; transform:translateY(-50%); width:14px; height:14px; color:#94a3b8;"></i>
+                                <input type="text" id="search-available-pos" placeholder="Search PO # or supplier..." style="width:100%; padding:7px 10px 7px 32px; font-size:0.75rem; border:1px solid #cbd5e1; border-radius:8px; outline:none; box-sizing:border-box;">
+                            </div>
+
                             <div id="available-pos-list" style="display:flex; flex-direction:column; gap:10px; max-height:480px; overflow-y:auto;">
                                 @foreach($availablePos as $ap)
-                                    <div class="available-po-card" data-po="{{ $ap['po_number'] }}">
+                                    <div class="available-po-card" data-po="{{ $ap['po_number'] }}" data-supplier="{{ strtolower($ap['supplier']) }}">
                                         <div>
                                             <div style="font-size:0.85rem; font-weight:700; color:#1e293b;">{{ $ap['po_number'] }}</div>
                                             <div style="font-size:0.75rem; color:#64748b;">{{ $ap['supplier'] }}</div>
                                         </div>
-                                        <div style="font-size:0.85rem; font-weight:700; color:#334155;">${{ number_format($ap['total'], 2) }}</div>
+                                        <div style="font-size:0.85rem; font-weight:700; color:#334155;">₱{{ number_format($ap['total'], 2) }}</div>
                                     </div>
                                 @endforeach
+                            </div>
+
+                            <div id="no-pos-found-msg" class="hidden" style="text-align:center; padding:20px 10px; color:#94a3b8; font-size:0.78rem;">
+                                <i data-lucide="file-x" style="width:24px; height:24px; margin:0 auto 6px auto; display:block; opacity:0.6;"></i>
+                                <span>No Purchase Orders found</span>
                             </div>
                         </div>
                     </div>
@@ -1918,6 +1997,14 @@
                             <span class="detail-label">Warehouse</span>
                             <span class="detail-value" id="summary-warehouse">{{ $selectedRecord['warehouse'] ?? 'Harare Central Depot' }}</span>
                         </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Created At</span>
+                            <span class="detail-value" id="summary-created-at">{{ isset($selectedRecord['created_at']) ? \Illuminate\Support\Carbon::parse($selectedRecord['created_at'])->format('d M Y • g:i A') : '14 Jun 2024 • 2:30 PM' }}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Updated At</span>
+                            <span class="detail-value" id="summary-updated-at">{{ isset($selectedRecord['updated_at']) ? \Illuminate\Support\Carbon::parse($selectedRecord['updated_at'])->format('d M Y • g:i A') : '18 Jun 2024 • 2:30 PM' }}</span>
+                        </div>
                     </div>
 
                     <!-- Documents Section -->
@@ -1955,16 +2042,16 @@
                             <div class="recon-item">
                                 <div class="recon-header">
                                     <span class="recon-label">PO Value</span>
-                                    <span class="recon-value" id="summary-recon-po-val">$284,500.00</span>
+                                    <span class="recon-value" id="summary-recon-po-val">₱284,500.00</span>
                                 </div>
                                 <div class="progress-bar-bg">
-                                    <div class="progress-bar-fill bg-po-fill" style="width: 100%;"></div>
+                                    <div class="progress-bar-fill bg-po-fill" id="summary-recon-po-progress" style="width: 100%;"></div>
                                 </div>
                             </div>
                             <div class="recon-item">
                                 <div class="recon-header">
                                     <span class="recon-label">Received (GRN)</span>
-                                    <span class="recon-value" id="summary-recon-grn-val">$284,500.00</span>
+                                    <span class="recon-value" id="summary-recon-grn-val">₱284,500.00</span>
                                 </div>
                                 <div class="progress-bar-bg">
                                     <div class="progress-bar-fill bg-grn-fill" id="summary-recon-grn-progress" style="width: 100%;"></div>
@@ -1973,7 +2060,7 @@
                             <div class="recon-item">
                                 <div class="recon-header">
                                     <span class="recon-label">Invoice Amount</span>
-                                    <span class="recon-value" id="summary-recon-inv-val">$284,500.00</span>
+                                    <span class="recon-value" id="summary-recon-inv-val">₱284,500.00</span>
                                 </div>
                                 <div class="progress-bar-bg">
                                     <div class="progress-bar-fill bg-inv-fill" id="summary-recon-inv-progress" style="width: 100%;"></div>
@@ -2199,7 +2286,7 @@
         refreshData();
     });
 
-    function refreshData() {
+    function refreshData(selectKey = null) {
         searchInput.value = '';
         supplierSelect.value = 'All Suppliers';
         activeStatus = 'All';
@@ -2223,6 +2310,14 @@
                 allRecords = data.records;
                 currentPage = 1;
                 applyFilters();
+                if (selectKey) {
+                    selectedRecordKey = selectKey;
+                    const record = allRecords.find(r => (r.po_number + '-' + r.supplier.replace(/\s+/g, '')) === selectKey || r.grn_number === selectKey || r.id == selectKey);
+                    if (record) {
+                        updateSummaryPanel(record);
+                        openDrawer();
+                    }
+                }
             }
         });
     }
@@ -2303,6 +2398,13 @@
             if (maxAmt !== null && item.po_amount > maxAmt) return false;
 
             return true;
+        });
+
+        // Default sorting: Newest records first (created_at descending)
+        currentFilteredRecords.sort((a, b) => {
+            const timeA = new Date(String(a.created_at || a.po_date).replace(' ', 'T')).getTime() || 0;
+            const timeB = new Date(String(b.created_at || b.po_date).replace(' ', 'T')).getTime() || 0;
+            return timeB - timeA;
         });
 
         renderTable();
@@ -2431,6 +2533,9 @@
                 <td class="col-amount">${invAmtFormatted}</td>
                 <td class="col-variance">${varianceHtml}</td>
                 <td>${statusBadgeHtml}</td>
+                <td style="font-size:0.75rem; color:#475569; white-space:nowrap;">
+                    ${formatTimestamp(record.created_at || record.po_date)}
+                </td>
             `;
 
             recordsTbody.appendChild(tr);
@@ -2587,6 +2692,12 @@
         const whEl = document.getElementById('summary-warehouse');
         if (whEl) whEl.textContent = record.warehouse || 'Harare Central Depot';
 
+        const createdAtEl = document.getElementById('summary-created-at');
+        if (createdAtEl) createdAtEl.textContent = formatTimestamp(record.created_at || record.po_date);
+
+        const updatedAtEl = document.getElementById('summary-updated-at');
+        if (updatedAtEl) updatedAtEl.textContent = formatTimestamp(record.updated_at || record.created_at || record.po_date);
+
         // Documents
         const docPoIdEl = document.getElementById('summary-doc-po-id');
         if (docPoIdEl) docPoIdEl.textContent = record.po_number || '';
@@ -2624,22 +2735,41 @@
 
         // Amount Reconciliation
         const fmt = (num) => '₱' + Number(num || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        const poAmount = Number(record.po_amount || 0);
         
         const reconPoValEl = document.getElementById('summary-recon-po-val');
-        if (reconPoValEl) reconPoValEl.textContent = fmt(record.po_amount);
+        if (reconPoValEl) reconPoValEl.textContent = fmt(poAmount);
 
-        const grnVal = record.grn_number ? (record.po_amount + (record.variance < 0 ? record.variance : 0)) : 0;
+        const poProgEl = document.getElementById('summary-recon-po-progress');
+        if (poProgEl) poProgEl.style.width = poAmount > 0 ? '100%' : '0%';
+
+        const grnVal = record.grn_number ? (poAmount + (record.variance < 0 ? record.variance : 0)) : 0;
         const reconGrnValEl = document.getElementById('summary-recon-grn-val');
         if (reconGrnValEl) reconGrnValEl.textContent = record.grn_number ? fmt(grnVal) : '₱0.00';
         
         const grnProgEl = document.getElementById('summary-recon-grn-progress');
-        if (grnProgEl) grnProgEl.style.width = record.grn_number ? (record.variance < 0 ? '90%' : '100%') : '0%';
+        if (grnProgEl) {
+            if (record.grn_number && poAmount > 0) {
+                const grnPct = Math.min(100, Math.max(0, (grnVal / poAmount) * 100));
+                grnProgEl.style.width = `${grnPct}%`;
+            } else {
+                grnProgEl.style.width = '0%';
+            }
+        }
 
+        const invVal = record.invoice_number ? Number(record.invoice_amount || 0) : 0;
         const reconInvValEl = document.getElementById('summary-recon-inv-val');
         if (reconInvValEl) reconInvValEl.textContent = record.invoice_number ? fmt(record.invoice_amount) : '—';
 
         const invProgEl = document.getElementById('summary-recon-inv-progress');
-        if (invProgEl) invProgEl.style.width = record.invoice_number ? (record.variance > 0 ? '100%' : '90%') : '0%';
+        if (invProgEl) {
+            if (record.invoice_number && poAmount > 0) {
+                const invPct = Math.min(100, Math.max(0, (invVal / poAmount) * 100));
+                invProgEl.style.width = `${invPct}%`;
+            } else {
+                invProgEl.style.width = '0%';
+            }
+        }
 
         // Alert Banner
         const alertEl = document.getElementById('summary-recon-alert');
@@ -2770,6 +2900,9 @@
                                 setTimeout(() => {
                                     btnDispute.disabled = false;
                                     btnDispute.innerHTML = originalHtml;
+                                    record.updated_at = new Date().toISOString().replace('T', ' ').substring(0, 19);
+                                    updateSummaryPanel(record);
+                                    renderTable();
                                     showToast('Dispute created successfully.', 'success');
                                 }, 500);
                             }
@@ -2793,6 +2926,9 @@
                                 setTimeout(() => {
                                     btnCredit.disabled = false;
                                     btnCredit.innerHTML = originalHtml;
+                                    record.updated_at = new Date().toISOString().replace('T', ' ').substring(0, 19);
+                                    updateSummaryPanel(record);
+                                    renderTable();
                                     showToast('Credit note request submitted.', 'success');
                                 }, 500);
                             }
@@ -2860,6 +2996,7 @@
                 showToast(data.message || 'Payment approved successfully.', 'success');
                 record.status = 'Approved for Payment';
                 record.payment_approvable = true;
+                record.updated_at = data.updated_at || new Date().toISOString().replace('T', ' ').substring(0, 19);
                 updateSummaryPanel(record);
                 renderTable();
             } else {
@@ -2979,6 +3116,29 @@
     let isFormDirty = false;
     let selectedPoTotal = 0;
     let availablePosData = {!! json_encode($availablePos) !!};
+    let existingProductsData = {!! json_encode($productsList ?? []) !!};
+
+    function formatTimestamp(tsStr) {
+        if (!tsStr) return '—';
+        let d;
+        if (typeof tsStr === 'string' && tsStr.includes(' ')) {
+            d = new Date(tsStr.replace(' ', 'T'));
+        } else {
+            d = new Date(tsStr);
+        }
+        if (isNaN(d.getTime())) return tsStr;
+
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const day = String(d.getDate()).padStart(2, '0');
+        const month = months[d.getMonth()];
+        const year = d.getFullYear();
+        let hours = d.getHours();
+        const minutes = String(d.getMinutes()).padStart(2, '0');
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12;
+        hours = hours ? hours : 12;
+        return `${day} ${month} ${year} • ${hours}:${minutes} ${ampm}`;
+    }
 
     // Elements
     const recordGrnForm = document.getElementById('record-grn-form');
@@ -3216,6 +3376,48 @@
         loadPoItems(poNum);
     }
 
+    const searchAvailablePosInput = document.getElementById('search-available-pos');
+    const noPosFoundMsg = document.getElementById('no-pos-found-msg');
+    const availablePosCount = document.getElementById('available-pos-count');
+
+    if (searchAvailablePosInput) {
+        searchAvailablePosInput.addEventListener('input', () => {
+            filterAvailablePosList(searchAvailablePosInput.value);
+        });
+    }
+
+    function filterAvailablePosList(queryStr = '') {
+        const query = (queryStr || '').trim().toLowerCase();
+        const cards = availablePosList ? availablePosList.querySelectorAll('.available-po-card') : [];
+        let visibleCount = 0;
+
+        cards.forEach(card => {
+            const poNum = (card.getAttribute('data-po') || '').toLowerCase();
+            const supplier = (card.getAttribute('data-supplier') || card.innerText || '').toLowerCase();
+
+            if (!query || poNum.includes(query) || supplier.includes(query)) {
+                card.style.display = 'flex';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+
+        if (noPosFoundMsg) {
+            if (visibleCount === 0) {
+                noPosFoundMsg.classList.remove('hidden');
+            } else {
+                noPosFoundMsg.classList.add('hidden');
+            }
+        }
+
+        if (availablePosCount) {
+            availablePosCount.textContent = visibleCount;
+        }
+
+        if (window.lucide) lucide.createIcons();
+    }
+
     if (availablePosList) {
         availablePosList.addEventListener('click', (e) => {
             const card = e.target.closest('.available-po-card');
@@ -3250,41 +3452,66 @@
         });
     }
 
+    let currentSelectedPoData = null;
+
     function populatePoFields(data) {
         if (!data) return;
-
+        currentSelectedPoData = data;
         selectedPoTotal = parseFloat(data.total || 0);
 
         if (grnLocationInput) {
             grnLocationInput.value = data.warehouse || 'Harare Central Depot';
         }
 
-        // Render receipt lines table (Requirement 3)
+        // Render receipt lines table strictly from PO items
         receiptLinesTbody.innerHTML = '';
         if (data.items && data.items.length > 0) {
             data.items.forEach((it, idx) => {
-                appendReceiptLineRow(`Item #${idx+1}`, it.name, it.qty || 100, it.qty || 100, it.qty || 100, it.unit_price || 25, 'OK', '');
+                appendPoReceiptLineRow(`Item #${idx+1}`, it, data);
             });
-        } else {
-            appendReceiptLineRow('PO Item #1', 'Agricultural Produce Bulk Cargo', 1000, 1000, 1000, 250.00, 'OK', '');
         }
-
+        updateAddLineButtonState();
         lucide.createIcons();
         updateLiveThreeWayMatching();
     }
 
-    // Append Receipt Line Row (Requirement 3)
-    function appendReceiptLineRow(poItem = 'PO Line', name = '', qtyOrdered = 100, qtyRec = 100, qtyAcc = 100, price = 0, condition = 'OK', remarks = '') {
+    // Append Receipt Line Row restricted strictly to PO items
+    function appendPoReceiptLineRow(poItemLabel = 'PO Line', poItem = null, poData = null) {
+        if (!poData) poData = currentSelectedPoData;
+        const availablePoItems = (poData && poData.items) ? poData.items : [];
+
+        // If no specific poItem passed, select first unused item from PO
+        if (!poItem && availablePoItems.length > 0) {
+            const usedNames = Array.from(receiptLinesTbody.querySelectorAll('.line-po-item-select')).map(s => s.value);
+            poItem = availablePoItems.find(it => !usedNames.includes(it.name)) || availablePoItems[0];
+        }
+
+        if (!poItem) return;
+
+        const name = poItem.name;
+        const qtyOrdered = parseFloat(poItem.qty || 0);
+        const qtyRec = qtyOrdered;
+        const qtyAcc = qtyOrdered;
+        const price = parseFloat(poItem.unit_price || 0);
         const isServices = receiptTypeInput ? (receiptTypeInput.value === 'services') : false;
         const lineTotal = (parseFloat(qtyAcc) * parseFloat(price)).toFixed(2);
-        
+
+        // Build item select options restricted strictly to items on this PO
+        let itemSelectOptionsHtml = '';
+        availablePoItems.forEach(it => {
+            const isSelected = (it.name === name);
+            itemSelectOptionsHtml += `<option value="${it.name.replace(/"/g, '&quot;')}" ${isSelected ? 'selected' : ''}>${it.name}</option>`;
+        });
+
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td>
-                <input type="text" name="lines[][po_item]" class="form-control" value="${poItem}" style="padding:4px 8px;font-size:0.75rem;">
+                <input type="text" name="lines[][po_item]" class="form-control line-po-item" value="${poItemLabel}" style="padding:4px 8px;font-size:0.75rem; background-color:#f8fafc;" readonly>
             </td>
             <td>
-                <input type="text" name="lines[][name]" class="form-control" value="${name}" placeholder="${isServices ? 'Service Description' : 'Item Name'}" style="padding:4px 8px;font-size:0.75rem;" required>
+                <select name="lines[][name]" class="form-control line-po-item-select" style="padding:4px 8px;font-size:0.75rem;font-weight:600;color:#0f172a;" required>
+                    ${itemSelectOptionsHtml}
+                </select>
             </td>
             <td>
                 <input type="number" step="0.01" class="form-control line-qty-ordered" value="${qtyOrdered}" style="padding:4px 8px;font-size:0.75rem; background-color:#f8fafc;" readonly>
@@ -3296,20 +3523,20 @@
                 <input type="number" step="0.01" name="lines[][qty_accepted]" class="form-control line-qty-accepted" value="${qtyAcc}" style="padding:4px 8px;font-size:0.75rem;" required>
             </td>
             <td>
-                <input type="number" step="0.01" name="lines[][unit_price]" class="form-control line-unit-price" value="${price}" style="padding:4px 8px;font-size:0.75rem;" required>
+                <input type="number" step="0.01" name="lines[][unit_price]" class="form-control line-unit-price" value="${price}" style="padding:4px 8px;font-size:0.75rem; background-color:#f8fafc;" readonly required>
             </td>
             <td>
                 <input type="text" class="form-control line-total-val" value="₱${Number(lineTotal).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}" style="padding:4px 8px;font-size:0.75rem; font-weight:700; background-color:#f8fafc;" readonly>
             </td>
             <td>
                 <select name="lines[][condition]" class="form-control line-condition" style="padding:4px 6px;font-size:0.75rem;">
-                    <option value="OK" ${condition === 'OK' ? 'selected' : ''}>${isServices ? 'Completed' : 'OK'}</option>
-                    <option value="Damaged" ${condition === 'Damaged' ? 'selected' : ''}>${isServices ? 'Defective Work' : 'Damaged'}</option>
-                    <option value="Partial" ${condition === 'Partial' ? 'selected' : ''}>${isServices ? 'Partially Done' : 'Partial'}</option>
+                    <option value="OK" selected>${isServices ? 'Completed' : 'OK'}</option>
+                    <option value="Damaged">${isServices ? 'Defective Work' : 'Damaged'}</option>
+                    <option value="Partial">${isServices ? 'Partially Done' : 'Partial'}</option>
                 </select>
             </td>
             <td style="text-align:center;">
-                <button type="button" class="btn-remove-line" style="background:none;border:none;color:#ef4444;cursor:pointer;"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button>
+                <button type="button" class="btn-remove-line" style="background:none;border:none;color:#ef4444;cursor:pointer;" title="Remove Line"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button>
             </td>
         `;
 
@@ -3317,13 +3544,40 @@
         tr.querySelector('.btn-remove-line').addEventListener('click', () => {
             tr.remove();
             isFormDirty = true;
+            updatePoItemDropdowns();
+            updateAddLineButtonState();
             updateLiveThreeWayMatching();
         });
 
+        // Dropdown Item Change Listener
+        const itemSelect = tr.querySelector('.line-po-item-select');
+        if (itemSelect) {
+            itemSelect.addEventListener('change', () => {
+                const selectedName = itemSelect.value;
+                const foundItem = availablePoItems.find(it => it.name === selectedName);
+                if (foundItem) {
+                    tr.querySelector('.line-qty-ordered').value = foundItem.qty || 0;
+                    tr.querySelector('.line-qty-received').value = foundItem.qty || 0;
+                    tr.querySelector('.line-qty-accepted').value = foundItem.qty || 0;
+                    tr.querySelector('.line-unit-price').value = foundItem.unit_price || 0;
+                    recalculateRow(tr);
+                }
+                updatePoItemDropdowns();
+                updateAddLineButtonState();
+                isFormDirty = true;
+                updateLiveThreeWayMatching();
+            });
+        }
+
         // Input recalculation & live validation listeners
-        const inputs = tr.querySelectorAll('.line-qty-received, .line-qty-accepted, .line-unit-price, .line-condition');
+        const inputs = tr.querySelectorAll('.line-qty-received, .line-qty-accepted, .line-condition');
         inputs.forEach(inp => {
             inp.addEventListener('input', () => {
+                recalculateRow(tr);
+                isFormDirty = true;
+                updateLiveThreeWayMatching();
+            });
+            inp.addEventListener('change', () => {
                 recalculateRow(tr);
                 isFormDirty = true;
                 updateLiveThreeWayMatching();
@@ -3332,6 +3586,226 @@
 
         receiptLinesTbody.appendChild(tr);
         recalculateRow(tr);
+        updatePoItemDropdowns();
+        updateAddLineButtonState();
+    }
+
+    // Disable already selected PO items in other rows' dropdowns
+    function updatePoItemDropdowns() {
+        const selects = Array.from(receiptLinesTbody.querySelectorAll('.line-po-item-select'));
+        const selectedValues = selects.map(s => s.value);
+
+        selects.forEach(select => {
+            const currentVal = select.value;
+            Array.from(select.options).forEach(opt => {
+                if (opt.value !== currentVal && selectedValues.includes(opt.value)) {
+                    opt.disabled = true;
+                    opt.style.color = '#cbd5e1';
+                } else {
+                    opt.disabled = false;
+                    opt.style.color = '#0f172a';
+                }
+            });
+        });
+    }
+
+    // Enable / Disable Add Line button based on remaining PO items
+    function updateAddLineButtonState() {
+        if (!btnAddLine) return;
+        const availableItems = (currentSelectedPoData && currentSelectedPoData.items) ? currentSelectedPoData.items : [];
+        const usedCount = receiptLinesTbody.querySelectorAll('tr').length;
+
+        if (availableItems.length === 0 || usedCount >= availableItems.length) {
+            btnAddLine.disabled = true;
+            btnAddLine.style.opacity = '0.5';
+            btnAddLine.style.cursor = 'not-allowed';
+            btnAddLine.title = 'All items from this Purchase Order have already been added';
+        } else {
+            btnAddLine.disabled = false;
+            btnAddLine.style.opacity = '1';
+            btnAddLine.style.cursor = 'pointer';
+            btnAddLine.title = 'Add line from Purchase Order';
+        }
+    }
+
+    // Searchable Autocomplete Engine (Floating Portal)
+    function setupAutocomplete(tr) {
+        const input = tr.querySelector('.line-name-input');
+        const unitPriceInput = tr.querySelector('.line-unit-price');
+        if (!input) return;
+
+        // Create floating dropdown element attached to document.body to prevent table clipping
+        const dropdown = document.createElement('div');
+        dropdown.className = 'autocomplete-dropdown hidden';
+        document.body.appendChild(dropdown);
+
+        let activeIndex = -1;
+
+        function positionDropdown() {
+            if (dropdown.classList.contains('hidden')) return;
+            const rect = input.getBoundingClientRect();
+            const spaceBelow = window.innerHeight - rect.bottom;
+            const spaceAbove = rect.top;
+
+            dropdown.style.width = `${Math.max(rect.width, 220)}px`;
+            dropdown.style.left = `${rect.left}px`;
+
+            // Auto-position above or below depending on available screen space
+            if (spaceBelow < 180 && spaceAbove > spaceBelow) {
+                dropdown.style.top = 'auto';
+                dropdown.style.bottom = `${window.innerHeight - rect.top + 2}px`;
+            } else {
+                dropdown.style.bottom = 'auto';
+                dropdown.style.top = `${rect.bottom + 2}px`;
+            }
+        }
+
+        function renderDropdown(filterText = '') {
+            const query = (filterText || '').trim().toLowerCase();
+            let matches = existingProductsData || [];
+            if (query) {
+                matches = matches.filter(p => p.name && p.name.toLowerCase().includes(query));
+            }
+
+            dropdown.innerHTML = '';
+            activeIndex = -1;
+
+            if (matches.length === 0 && !query) {
+                dropdown.classList.add('hidden');
+                return;
+            }
+
+            matches.forEach((prod, idx) => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'autocomplete-item';
+                itemDiv.dataset.index = idx;
+                itemDiv.dataset.name = prod.name;
+                itemDiv.dataset.price = prod.unit_price || 0;
+
+                const priceVal = parseFloat(prod.unit_price || 0);
+                const priceStr = priceVal > 0 ? `₱${Number(priceVal).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}` : '';
+
+                itemDiv.innerHTML = `
+                    <span style="font-weight:600;">${prod.name}</span>
+                    ${priceStr ? `<span class="item-price" style="font-weight:600;color:#059669;">${priceStr}</span>` : ''}
+                `;
+
+                itemDiv.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    selectProduct(prod.name, prod.unit_price);
+                });
+
+                dropdown.appendChild(itemDiv);
+            });
+
+            // Option to add/use custom item if query is entered and not an exact match
+            const exactMatch = matches.some(p => p.name && p.name.toLowerCase() === query);
+            if (query && !exactMatch) {
+                const customDiv = document.createElement('div');
+                customDiv.className = 'autocomplete-item autocomplete-custom-item';
+                customDiv.innerHTML = `<span style="display:inline-flex;align-items:center;gap:4px;"><i data-lucide="plus-circle" style="width:13px;height:13px;"></i> Add Custom Item: "${filterText.trim()}"</span>`;
+                customDiv.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    selectProduct(filterText.trim(), null);
+                });
+                dropdown.appendChild(customDiv);
+            }
+
+            dropdown.classList.remove('hidden');
+            positionDropdown();
+            if (window.lucide) lucide.createIcons();
+        }
+
+        function selectProduct(name, price) {
+            input.value = name;
+            if (price !== null && price !== undefined && parseFloat(price) > 0 && unitPriceInput) {
+                unitPriceInput.value = price;
+            }
+            dropdown.classList.add('hidden');
+            recalculateRow(tr);
+            isFormDirty = true;
+            updateLiveThreeWayMatching();
+        }
+
+        input.addEventListener('focus', () => {
+            renderDropdown(input.value);
+        });
+
+        input.addEventListener('input', () => {
+            renderDropdown(input.value);
+            recalculateRow(tr);
+            isFormDirty = true;
+            updateLiveThreeWayMatching();
+        });
+
+        input.addEventListener('keydown', (e) => {
+            const items = dropdown.querySelectorAll('.autocomplete-item');
+            if (items.length === 0 || dropdown.classList.contains('hidden')) {
+                if (e.key === 'Enter') {
+                    dropdown.classList.add('hidden');
+                }
+                return;
+            }
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                activeIndex = (activeIndex + 1) % items.length;
+                updateActiveItem(items);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                activeIndex = (activeIndex - 1 + items.length) % items.length;
+                updateActiveItem(items);
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                if (activeIndex >= 0 && activeIndex < items.length) {
+                    items[activeIndex].dispatchEvent(new MouseEvent('mousedown'));
+                } else if (items.length > 0) {
+                    items[0].dispatchEvent(new MouseEvent('mousedown'));
+                } else {
+                    dropdown.classList.add('hidden');
+                }
+            } else if (e.key === 'Escape') {
+                dropdown.classList.add('hidden');
+            }
+        });
+
+        function updateActiveItem(items) {
+            items.forEach((it, idx) => {
+                if (idx === activeIndex) {
+                    it.classList.add('active');
+                    it.scrollIntoView({ block: 'nearest' });
+                } else {
+                    it.classList.remove('active');
+                }
+            });
+        }
+
+        input.addEventListener('blur', () => {
+            setTimeout(() => {
+                dropdown.classList.add('hidden');
+            }, 200);
+        });
+
+        // Reposition floating dropdown on scroll or resize
+        const handleScrollOrResize = () => {
+            if (!dropdown.classList.contains('hidden')) {
+                positionDropdown();
+            }
+        };
+        window.addEventListener('scroll', handleScrollOrResize, true);
+        window.addEventListener('resize', handleScrollOrResize);
+
+        // Cleanup when row is removed
+        const removeBtn = tr.querySelector('.btn-remove-line');
+        if (removeBtn) {
+            removeBtn.addEventListener('click', () => {
+                window.removeEventListener('scroll', handleScrollOrResize, true);
+                window.removeEventListener('resize', handleScrollOrResize);
+                if (dropdown.parentNode) {
+                    dropdown.parentNode.removeChild(dropdown);
+                }
+            });
+        }
     }
 
     function recalculateRow(tr) {
@@ -3376,10 +3850,23 @@
 
     if (btnAddLine) {
         btnAddLine.addEventListener('click', () => {
-            appendReceiptLineRow('New Item', '', 100, 100, 100, 0, 'OK', '');
-            lucide.createIcons();
-            isFormDirty = true;
-            updateLiveThreeWayMatching();
+            if (!currentSelectedPoData || !currentSelectedPoData.items || currentSelectedPoData.items.length === 0) {
+                showToast("Please select a Purchase Order first.", "warning");
+                return;
+            }
+
+            const usedNames = Array.from(receiptLinesTbody.querySelectorAll('.line-po-item-select')).map(s => s.value);
+            const unusedItem = currentSelectedPoData.items.find(it => !usedNames.includes(it.name));
+
+            if (unusedItem) {
+                const lineIndex = receiptLinesTbody.querySelectorAll('tr').length + 1;
+                appendPoReceiptLineRow(`Item #${lineIndex}`, unusedItem, currentSelectedPoData);
+                lucide.createIcons();
+                isFormDirty = true;
+                updateLiveThreeWayMatching();
+            } else {
+                showToast("All items from this Purchase Order have already been added.", "info");
+            }
         });
     }
 
@@ -3523,7 +4010,7 @@
         // Invoice Amount Validation
         const invAmt = grnInvoiceAmount ? parseFloat(grnInvoiceAmount.value) : 0;
         if (grnInvoiceAmount && grnInvoiceAmount.value !== '' && (isNaN(invAmt) || invAmt <= 0)) {
-            errors.push("Invoice amount must be a positive numeric value greater than $0.00.");
+            errors.push("Invoice amount must be a positive numeric value greater than ₱0.00.");
         }
 
         // Date Validations
@@ -3540,16 +4027,30 @@
 
         // Live Line Validations
         const rows = receiptLinesTbody.querySelectorAll('tr');
+        if (rows.length === 0) {
+            errors.push("At least one Purchase Order receipt line is required.");
+        }
+
         rows.forEach((tr, index) => {
+            const itemSelect = tr.querySelector('.line-po-item-select');
+            const qtyOrd = parseFloat(tr.querySelector('.line-qty-ordered')?.value || 0);
             const qtyRec = parseFloat(tr.querySelector('.line-qty-received')?.value || 0);
             const qtyAcc = parseFloat(tr.querySelector('.line-qty-accepted')?.value || 0);
             const price = parseFloat(tr.querySelector('.line-unit-price')?.value || 0);
+            const itemName = itemSelect ? itemSelect.value : `Row #${index+1}`;
 
             if (qtyAcc > qtyRec) {
-                errors.push(`Row #${index+1}: Quantity accepted (${qtyAcc}) cannot exceed quantity received (${qtyRec}).`);
+                errors.push(`${itemName}: Quantity accepted (${qtyAcc}) cannot exceed quantity received (${qtyRec}).`);
             }
             if (qtyRec < 0 || qtyAcc < 0 || price < 0) {
-                errors.push(`Row #${index+1}: Negative quantities or unit prices are not allowed.`);
+                errors.push(`${itemName}: Negative quantities or unit prices are not allowed.`);
+            }
+            if (qtyRec > qtyOrd && qtyOrd > 0) {
+                const qtyRecEl = tr.querySelector('.line-qty-received');
+                if (qtyRecEl) {
+                    qtyRecEl.style.borderColor = '#d97706';
+                    qtyRecEl.title = 'Warning: Quantity received exceeds ordered PO quantity';
+                }
             }
         });
 
@@ -3608,19 +4109,22 @@
 
                 if (data.success) {
                     isFormDirty = false;
+                    if (grnNumberInput && data.grn_number) {
+                        grnNumberInput.value = data.grn_number;
+                    }
                     recordGrnView.classList.add('hidden');
                     dashboardViewportView.classList.remove('hidden');
 
-                    // Requirement 9 Success Notification Flow
-                    let msg = "Goods Receipt recorded successfully.";
+                    let msg = `Receipt ${data.grn_number || ''} recorded successfully.`;
                     if (data.status === 'Matched') {
-                        msg = "Goods Receipt recorded successfully. Invoice successfully matched.";
+                        msg = `Receipt ${data.grn_number || ''} recorded successfully. Invoice 3-way matched.`;
                     } else if (data.status === 'Partial Match' || data.status === 'Mismatch') {
-                        msg = "Goods Receipt recorded. Discrepancy requires review.";
+                        msg = `Receipt ${data.grn_number || ''} recorded. Discrepancy requires review.`;
                     }
                     showToast(msg, data.status === 'Matched' ? 'success' : 'warning');
 
-                    refreshData();
+                    const newKey = data.record ? (data.record.po_number + '-' + data.record.supplier.replace(/\s+/g, '')) : (data.po_number ? (data.po_number + '-' + (data.supplier || '').replace(/\s+/g, '')) : null);
+                    refreshData(newKey);
                 } else {
                     showToast(data.message || "Failed to record Goods Receipt.", "error");
                 }
@@ -3628,12 +4132,7 @@
             .catch(err => {
                 if (btnSubmit) btnSubmit.disabled = false;
                 if (btnText) btnText.textContent = "Submit Goods Receipt & Match";
-
-                isFormDirty = false;
-                recordGrnView.classList.add('hidden');
-                dashboardViewportView.classList.remove('hidden');
-                showToast("Goods Receipt recorded successfully. Invoice successfully matched.", "success");
-                refreshData();
+                showToast("Failed to record Goods Receipt. " + (err.message || ""), "error");
             });
         });
     }
@@ -3664,7 +4163,7 @@
             btnTypeServices.style.boxShadow = 'none';
 
             lblGrnNumber.textContent = 'GRN NUMBER';
-            grnNumberInput.value = 'GRN-2024-03401';
+            grnNumberInput.value = 'Auto-generated upon submission';
             lblReceivedAt.textContent = 'RECEIVED AT';
             lblLocation.textContent = 'RECEIVING LOCATION';
             grnLocationInput.placeholder = 'Warehouse or receiving bay';
@@ -3699,7 +4198,7 @@
             btnTypeGoods.style.boxShadow = 'none';
 
             lblGrnNumber.textContent = 'SRN / SERVICE RECEIPT #';
-            grnNumberInput.value = 'SRN-2024-00102';
+            grnNumberInput.value = 'Auto-generated upon submission';
             lblReceivedAt.textContent = 'SERVICE ENTRY DATE';
             lblLocation.textContent = 'SERVICE LOCATION / SITE';
             grnLocationInput.placeholder = 'Service site, department, or workshop';

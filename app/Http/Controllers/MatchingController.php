@@ -15,329 +15,7 @@ class MatchingController extends Controller
 {
     private function getMockData()
     {
-        return [
-            [
-                'id' => 'mock-1',
-                'po_number' => 'PO-2024-00841',
-                'po_date' => '14 Jun 2024',
-                'supplier' => 'Savanna Grain Co.',
-                'commodity' => 'White Maize',
-                'receipt_type' => 'goods',
-                'payment_terms' => 'Net 30',
-                'warehouse' => 'Harare Central Depot',
-                'grn_number' => 'GRN-2024-03291',
-                'grn_date' => '18 Jun 2024',
-                'invoice_number' => 'INV-SG-8821',
-                'invoice_date' => '19 Jun 2024',
-                'po_amount' => 284500.00,
-                'invoice_amount' => 284500.00,
-                'variance' => 0.0,
-                'status' => 'Matched',
-                'supplier_initials' => 'SA',
-                'payment_approvable' => true,
-                'discrepancies' => [],
-                'matched_fields' => ['PO Number: PO-2024-00841', 'Supplier: Savanna Grain Co.', 'Quantities: 100/100 Accepted', 'Amounts Reconciled'],
-                'received_by' => 'Central Depot Receiving',
-                'received_at' => '2024-06-18 14:30:00',
-                'approved_by' => null,
-                'approved_at' => null,
-            ],
-            [
-                'id' => 'mock-2',
-                'po_number' => 'PO-2024-00856',
-                'po_date' => '15 Jun 2024',
-                'supplier' => 'Highveld Agri Traders',
-                'commodity' => 'Soybeans',
-                'receipt_type' => 'goods',
-                'payment_terms' => 'Net 45',
-                'warehouse' => 'Bulawayo Silo Complex',
-                'grn_number' => 'GRN-2024-03304',
-                'grn_date' => '20 Jun 2024',
-                'invoice_number' => 'INV-HA-4412',
-                'invoice_date' => '21 Jun 2024',
-                'po_amount' => 520000.00,
-                'invoice_amount' => 520000.00,
-                'variance' => -52000.00,
-                'status' => 'Partial Match',
-                'supplier_initials' => 'HI',
-                'payment_approvable' => false,
-                'discrepancies' => [
-                    'Quantity Shortage: Received value (₱468,000.00) is less than PO ordered value (₱520,000.00) by ₱52,000.00.',
-                    'Delivery Issue: 100 bags rejected due to moisture damage upon receipt inspection.'
-                ],
-                'matched_fields' => ['PO Number: PO-2024-00856', 'Supplier: Highveld Agri Traders'],
-                'received_by' => 'Bulawayo Receiving Bay',
-                'received_at' => '2024-06-20 09:15:00',
-                'approved_by' => null,
-                'approved_at' => null,
-            ],
-            [
-                'id' => 'mock-3',
-                'po_number' => 'PO-2024-00872',
-                'po_date' => '17 Jun 2024',
-                'supplier' => 'Delta Farm Supplies',
-                'commodity' => 'Wheat',
-                'receipt_type' => 'goods',
-                'payment_terms' => 'Net 30',
-                'warehouse' => 'Gweru Storage Facility',
-                'grn_number' => 'GRN-2024-03318',
-                'grn_date' => '22 Jun 2024',
-                'invoice_number' => null,
-                'invoice_date' => null,
-                'po_amount' => 193750.00,
-                'invoice_amount' => 0.0,
-                'variance' => 0.0,
-                'status' => 'Pending Invoice',
-                'supplier_initials' => 'DE',
-                'payment_approvable' => false,
-                'discrepancies' => ['Supplier Invoice not found. Matching cannot be completed until all required documents are available.'],
-                'matched_fields' => ['PO Number: PO-2024-00872', 'Supplier: Delta Farm Supplies', 'Goods Received'],
-                'received_by' => 'Harare Receiving Bay',
-                'received_at' => '2024-06-22 11:00:00',
-                'approved_by' => null,
-                'approved_at' => null,
-            ],
-            [
-                'id' => 'mock-4',
-                'po_number' => 'PO-2024-00833',
-                'po_date' => '18 Jun 2024',
-                'supplier' => 'Zambezi Valley Farms',
-                'commodity' => 'Cotton Seed',
-                'receipt_type' => 'goods',
-                'payment_terms' => 'Net 15',
-                'warehouse' => 'Gweru Depot',
-                'grn_number' => null,
-                'grn_date' => null,
-                'invoice_number' => 'INV-ZV-1109',
-                'invoice_date' => '23 Jun 2024',
-                'po_amount' => 347200.00,
-                'invoice_amount' => 347200.00,
-                'variance' => 0.0,
-                'status' => 'Pending Receipt',
-                'supplier_initials' => 'ZA',
-                'payment_approvable' => false,
-                'discrepancies' => ['Delivery Receipt (GRN) not found. Matching cannot be completed until all required documents are available.'],
-                'matched_fields' => ['PO Number: PO-2024-00833', 'Supplier: Zambezi Valley Farms', 'Invoice Received'],
-                'received_by' => null,
-                'received_at' => null,
-                'approved_by' => null,
-                'approved_at' => null,
-            ],
-            [
-                'id' => 'mock-5',
-                'po_number' => 'PO-2024-00881',
-                'po_date' => '19 Jun 2024',
-                'supplier' => 'Pioneer Seeds Ltd.',
-                'commodity' => 'Sunflower',
-                'receipt_type' => 'goods',
-                'payment_terms' => 'Net 30',
-                'warehouse' => 'Mutare Logistics Hub',
-                'grn_number' => 'GRN-2024-03337',
-                'grn_date' => '24 Jun 2024',
-                'invoice_number' => 'INV-PS-7734',
-                'invoice_date' => '24 Jun 2024',
-                'po_amount' => 412000.00,
-                'invoice_amount' => 432500.00,
-                'variance' => 20500.00,
-                'status' => 'Mismatch',
-                'supplier_initials' => 'PI',
-                'payment_approvable' => false,
-                'discrepancies' => [
-                    'Total Amount Over-Invoiced: Invoice Amount (₱432,500.00) exceeds PO Value (₱412,000.00) by ₱20,500.00.',
-                    'Unit Price Mismatch: Invoice unit price differs from approved PO price.'
-                ],
-                'matched_fields' => ['PO Number: PO-2024-00881', 'Supplier: Pioneer Seeds Ltd.'],
-                'received_by' => 'Mutare Logistics Team',
-                'received_at' => '2024-06-24 16:20:00',
-                'approved_by' => null,
-                'approved_at' => null,
-            ],
-            [
-                'id' => 'mock-6',
-                'po_number' => 'PO-2024-00802',
-                'po_date' => '20 Jun 2024',
-                'supplier' => 'Savanna Grain Co.',
-                'commodity' => 'Yellow Maize',
-                'receipt_type' => 'goods',
-                'payment_terms' => 'Net 30',
-                'warehouse' => 'Harare Central Depot',
-                'grn_number' => 'GRN-2024-03261',
-                'grn_date' => '25 Jun 2024',
-                'invoice_number' => 'INV-SG-8839',
-                'invoice_date' => '25 Jun 2024',
-                'po_amount' => 170400.00,
-                'invoice_amount' => 170400.00,
-                'variance' => 0.0,
-                'status' => 'Approved for Payment',
-                'supplier_initials' => 'SA',
-                'payment_approvable' => true,
-                'discrepancies' => [],
-                'matched_fields' => ['PO Number: PO-2024-00802', 'Supplier: Savanna Grain Co.', 'Amounts Reconciled'],
-                'received_by' => 'Harare Receiving Bay',
-                'received_at' => '2024-06-25 10:00:00',
-                'approved_by' => 'System Admin',
-                'approved_at' => '2024-06-26 09:30:00',
-            ],
-            [
-                'id' => 'mock-7',
-                'po_number' => 'PO-2024-00895',
-                'po_date' => '22 Jun 2024',
-                'supplier' => 'Apex Agri Machinery Services',
-                'commodity' => 'Tractor Fleet Servicing',
-                'receipt_type' => 'services',
-                'payment_terms' => 'Net 30',
-                'warehouse' => 'Harare Central Workshop',
-                'grn_number' => 'SRN-2024-0089',
-                'grn_date' => '26 Jun 2024',
-                'invoice_number' => 'INV-AA-5521',
-                'invoice_date' => '27 Jun 2024',
-                'po_amount' => 88500.00,
-                'invoice_amount' => 88500.00,
-                'variance' => 0.0,
-                'status' => 'Matched',
-                'supplier_initials' => 'AP',
-                'payment_approvable' => true,
-                'discrepancies' => [],
-                'matched_fields' => ['PO Number: PO-2024-00895', 'Supplier: Apex Agri Machinery', 'Service Entry Verified', 'Amounts Reconciled'],
-                'received_by' => 'Fleet Maintenance Supervisor',
-                'received_at' => '2024-06-26 15:00:00',
-                'approved_by' => null,
-                'approved_at' => null,
-            ],
-            [
-                'id' => 'mock-8',
-                'po_number' => 'PO-2024-00908',
-                'po_date' => '24 Jun 2024',
-                'supplier' => 'Biolab Soil Testing Ltd.',
-                'commodity' => 'Soil Analysis & Audit',
-                'receipt_type' => 'services',
-                'payment_terms' => 'Net 15',
-                'warehouse' => 'Masvingo Regional Field Office',
-                'grn_number' => 'SRN-2024-0102',
-                'grn_date' => '28 Jun 2024',
-                'invoice_number' => 'INV-BS-3310',
-                'invoice_date' => '29 Jun 2024',
-                'po_amount' => 125000.00,
-                'invoice_amount' => 125000.00,
-                'variance' => 0.0,
-                'status' => 'Mismatch',
-                'supplier_initials' => 'BI',
-                'payment_approvable' => false,
-                'discrepancies' => [
-                    'Service Delivery Issue: Irrigation audit service incomplete (only 3 of 5 field sites surveyed).',
-                    'Service Entry Discrepancy: Sign-off sheet pending agronomist verification.'
-                ],
-                'matched_fields' => ['PO Number: PO-2024-00908', 'Supplier: Biolab Soil Testing Ltd.'],
-                'received_by' => 'Regional Agronomist',
-                'received_at' => '2024-06-28 11:30:00',
-                'approved_by' => null,
-                'approved_at' => null,
-            ],
-            [
-                'id' => 'mock-9',
-                'po_number' => 'PO-2024-00912',
-                'po_date' => '26 Jun 2024',
-                'supplier' => 'Green Harvest',
-                'commodity' => 'Fertilizers & Nutrients',
-                'receipt_type' => 'goods',
-                'payment_terms' => 'Net 30',
-                'warehouse' => 'Mutare Logistics Hub',
-                'grn_number' => 'GRN-2024-03412',
-                'grn_date' => '29 Jun 2024',
-                'invoice_number' => 'INV-GH-9012',
-                'invoice_date' => '30 Jun 2024',
-                'po_amount' => 317232.00,
-                'invoice_amount' => 317232.00,
-                'variance' => 0.0,
-                'status' => 'Matched',
-                'supplier_initials' => 'GR',
-                'payment_approvable' => true,
-                'discrepancies' => [],
-                'matched_fields' => ['PO Number: PO-2024-00912', 'Supplier: Green Harvest', 'Amounts Reconciled'],
-                'received_by' => 'Mutare Logistics Team',
-                'received_at' => '2024-06-29 10:00:00',
-                'approved_by' => null,
-                'approved_at' => null,
-            ],
-            [
-                'id' => 'mock-10',
-                'po_number' => 'PO-2024-00925',
-                'po_date' => '28 Jun 2024',
-                'supplier' => 'ABC Farms',
-                'commodity' => 'Hybrid Crop Seeds',
-                'receipt_type' => 'goods',
-                'payment_terms' => 'Net 30',
-                'warehouse' => 'Harare Central Depot',
-                'grn_number' => 'GRN-2024-03425',
-                'grn_date' => '01 Jul 2024',
-                'invoice_number' => 'INV-ABC-1025',
-                'invoice_date' => '02 Jul 2024',
-                'po_amount' => 501166.00,
-                'invoice_amount' => 501166.00,
-                'variance' => -50116.60,
-                'status' => 'Partial Match',
-                'supplier_initials' => 'AB',
-                'payment_approvable' => false,
-                'discrepancies' => ['Quantity Shortage: Accepted quantity is less than ordered PO quantity by 10%.'],
-                'matched_fields' => ['PO Number: PO-2024-00925', 'Supplier: ABC Farms'],
-                'received_by' => 'Central Depot Receiving',
-                'received_at' => '2024-07-01 14:00:00',
-                'approved_by' => null,
-                'approved_at' => null,
-            ],
-            [
-                'id' => 'mock-11',
-                'po_number' => 'PO-2024-00938',
-                'po_date' => '30 Jun 2024',
-                'supplier' => 'Fresh Mango Co.',
-                'commodity' => 'Storage Crates',
-                'receipt_type' => 'goods',
-                'payment_terms' => 'Net 15',
-                'warehouse' => 'Bulawayo Silo Complex',
-                'grn_number' => 'GRN-2024-03438',
-                'grn_date' => '03 Jul 2024',
-                'invoice_number' => null,
-                'invoice_date' => null,
-                'po_amount' => 116484.48,
-                'invoice_amount' => 0.0,
-                'variance' => 0.0,
-                'status' => 'Pending Invoice',
-                'supplier_initials' => 'FR',
-                'payment_approvable' => false,
-                'discrepancies' => ['Supplier Invoice not found. Matching cannot be completed until all required documents are available.'],
-                'matched_fields' => ['PO Number: PO-2024-00938', 'Supplier: Fresh Mango Co.'],
-                'received_by' => 'Bulawayo Receiving Bay',
-                'received_at' => '2024-07-03 09:00:00',
-                'approved_by' => null,
-                'approved_at' => null,
-            ],
-            [
-                'id' => 'mock-12',
-                'po_number' => 'PO-2024-00944',
-                'po_date' => '02 Jul 2024',
-                'supplier' => 'Green Harvest',
-                'commodity' => 'Organic Pesticides',
-                'receipt_type' => 'goods',
-                'payment_terms' => 'Net 30',
-                'warehouse' => 'Harare Central Depot',
-                'grn_number' => 'GRN-2024-03444',
-                'grn_date' => '04 Jul 2024',
-                'invoice_number' => 'INV-GH-9044',
-                'invoice_date' => '05 Jul 2024',
-                'po_amount' => 94168.48,
-                'invoice_amount' => 94168.48,
-                'variance' => 0.0,
-                'status' => 'Approved for Payment',
-                'supplier_initials' => 'GR',
-                'payment_approvable' => true,
-                'discrepancies' => [],
-                'matched_fields' => ['PO Number: PO-2024-00944', 'Supplier: Green Harvest'],
-                'received_by' => 'Harare Receiving Bay',
-                'received_at' => '2024-07-04 11:00:00',
-                'approved_by' => 'Finance Director',
-                'approved_at' => '2024-07-05 16:00:00',
-            ],
-        ];
+        return [];
     }
 
     private function getDatabaseRecords()
@@ -382,19 +60,26 @@ class MatchingController extends Controller
 
             if ($inv) {
                 $variance = $invAmount - $poAmount;
-                if (abs($variance) < 0.01 && abs($grnAcceptedTotal - $poAmount) < 0.01 && empty($discrepancies)) {
+                $grnDiff = $grnAcceptedTotal > 0 ? ($grnAcceptedTotal - $poAmount) : 0;
+
+                if ($variance > 0.01) {
+                    $status = 'Mismatch';
+                    $paymentApprovable = false;
+                    $discrepancies[] = 'Total Amount Over-Invoiced: Invoice Amount (₱' . number_format($invAmount, 2) . ') exceeds PO Value (₱' . number_format($poAmount, 2) . ') by +₱' . number_format($variance, 2) . '.';
+                } else if ($variance < -0.01 || $grnDiff < -0.01) {
+                    $status = 'Partial Match';
+                    $paymentApprovable = false;
+                    if ($variance < -0.01) {
+                        $discrepancies[] = 'Under-Invoiced: Invoice Amount (₱' . number_format($invAmount, 2) . ') is less than PO Value (₱' . number_format($poAmount, 2) . ') by -₱' . number_format(abs($variance), 2) . '.';
+                    }
+                    if ($grnDiff < -0.01) {
+                        $discrepancies[] = 'Quantity Shortage: Received/accepted total (₱' . number_format($grnAcceptedTotal, 2) . ') is less than ordered PO Value (₱' . number_format($poAmount, 2) . ').';
+                    }
+                } else {
                     $status = ($po->status === 'approved' || $po->status === 'received') ? 'Matched' : 'Approved for Payment';
                     $paymentApprovable = true;
                     $matchedFields[] = 'Amounts Fully Reconciled';
                     $matchedFields[] = 'Quantities & Prices Matched';
-                } else if ($variance > 0) {
-                    $status = 'Mismatch';
-                    $paymentApprovable = false;
-                    $discrepancies[] = 'Total Amount Over-Invoiced: Invoice Amount (₱' . number_format($invAmount, 2) . ') exceeds PO Value (₱' . number_format($poAmount, 2) . ') by ₱' . number_format($variance, 2) . '.';
-                } else {
-                    $status = 'Partial Match';
-                    $paymentApprovable = false;
-                    $discrepancies[] = 'Quantity Shortage / Partial Match: Delivered total (₱' . number_format($grnAcceptedTotal, 2) . ') differs from PO Value (₱' . number_format($poAmount, 2) . ').';
                 }
             } else {
                 $status = 'Pending Invoice';
@@ -439,95 +124,10 @@ class MatchingController extends Controller
                 'matched_fields' => $matchedFields,
                 'received_by' => $itemsData['received_by'] ?? 'Receiving Agent',
                 'received_at' => $dr->received_at ? Carbon::parse($dr->received_at)->format('Y-m-d H:i:s') : null,
+                'created_at' => $dr->created_at ? $dr->created_at->format('Y-m-d H:i:s') : ($dr->received_at ? Carbon::parse($dr->received_at)->format('Y-m-d H:i:s') : ($po->created_at ? $po->created_at->format('Y-m-d H:i:s') : now()->format('Y-m-d H:i:s'))),
+                'updated_at' => $dr->updated_at ? $dr->updated_at->format('Y-m-d H:i:s') : ($dr->created_at ? $dr->created_at->format('Y-m-d H:i:s') : now()->format('Y-m-d H:i:s')),
                 'approved_by' => $itemsData['approved_by'] ?? null,
                 'approved_at' => $itemsData['approved_at'] ?? null,
-            ];
-        }
-
-        // Standalone Invoices linked to POs
-        $invoicesWithoutDr = Invoice::with(['purchaseOrder.supplier'])
-            ->whereNotNull('purchase_order_id')
-            ->whereNotIn('purchase_order_id', array_column($dbRecords, 'po_id'))
-            ->get();
-
-        foreach ($invoicesWithoutDr as $inv) {
-            $po = $inv->purchaseOrder;
-            if (!$po) continue;
-
-            $supplierName = $po->supplier ? ($po->supplier->supplier_name ?? $po->supplier->name ?? 'Vendor') : 'Vendor';
-            $words = explode(' ', $supplierName);
-            $initials = strtoupper(substr($words[0] ?? 'V', 0, 1) . substr($words[1] ?? '', 0, 1));
-
-            $dbRecords[] = [
-                'id' => 'inv-' . $inv->id,
-                'po_number' => $po->po_number,
-                'po_id' => $po->id,
-                'po_date' => $po->created_at ? $po->created_at->format('d M Y') : now()->format('d M Y'),
-                'supplier' => $supplierName,
-                'commodity' => 'Vendor Invoice',
-                'receipt_type' => 'goods',
-                'payment_terms' => 'Net 30',
-                'warehouse' => 'Harare Central Depot',
-                'grn_number' => null,
-                'grn_date' => null,
-                'invoice_number' => $inv->invoice_number,
-                'invoice_date' => $inv->received_at ? Carbon::parse($inv->received_at)->format('d M Y') : now()->format('d M Y'),
-                'po_amount' => (float)$po->total,
-                'invoice_amount' => (float)$inv->amount,
-                'variance' => (float)($inv->amount - $po->total),
-                'status' => 'Pending Receipt',
-                'supplier_initials' => $initials ?: 'IN',
-                'payment_approvable' => false,
-                'discrepancies' => ['Delivery Receipt (GRN / SRN) not found. Matching cannot be completed until all required documents are available.'],
-                'matched_fields' => ['PO Number: ' . $po->po_number, 'Supplier: ' . $supplierName],
-                'received_by' => null,
-                'received_at' => null,
-                'approved_by' => null,
-                'approved_at' => null,
-            ];
-        }
-
-        // Standalone POs without DR or Invoice yet
-        $existingPoIds = array_column($dbRecords, 'po_id');
-        $posWithoutDocs = PurchaseOrder::with(['supplier'])
-            ->whereNotIn('id', array_filter($existingPoIds))
-            ->get();
-
-        foreach ($posWithoutDocs as $po) {
-            $supplierName = $po->supplier ? ($po->supplier->supplier_name ?? $po->supplier->name ?? 'Vendor') : 'Vendor';
-            $words = explode(' ', $supplierName);
-            $initials = strtoupper(substr($words[0] ?? 'V', 0, 1) . substr($words[1] ?? '', 0, 1));
-
-            $dbRecords[] = [
-                'id' => 'po-' . $po->id,
-                'po_number' => $po->po_number,
-                'po_id' => $po->id,
-                'po_date' => $po->created_at ? $po->created_at->format('d M Y') : now()->format('d M Y'),
-                'supplier' => $supplierName,
-                'commodity' => 'Purchase Order',
-                'receipt_type' => 'goods',
-                'payment_terms' => 'Net 30',
-                'warehouse' => 'Harare Central Depot',
-                'grn_number' => null,
-                'grn_date' => null,
-                'invoice_number' => null,
-                'invoice_date' => null,
-                'po_amount' => (float)$po->total,
-                'invoice_amount' => 0.0,
-                'variance' => 0.0,
-                'status' => 'Awaiting Delivery',
-                'supplier_initials' => $initials ?: 'PO',
-                'payment_approvable' => false,
-                'discrepancies' => [
-                    'Delivery Receipt (GRN / SRN) not found.',
-                    'Supplier Invoice not found.',
-                    'Matching cannot be completed until all required documents are available.'
-                ],
-                'matched_fields' => ['PO Number: ' . $po->po_number, 'Supplier: ' . $supplierName],
-                'received_by' => null,
-                'received_at' => null,
-                'approved_by' => null,
-                'approved_at' => null,
             ];
         }
 
@@ -636,7 +236,14 @@ class MatchingController extends Controller
             }
         }
 
-        return $list;
+        // Filter for eligible receiving statuses (Open, Pending Receipt, Awaiting Delivery, Partial)
+        $ineligible = ['fully received', 'received', 'closed', 'cancelled'];
+        $eligibleList = array_filter($list, function ($po) use ($ineligible) {
+            $st = strtolower(trim($po['status'] ?? ''));
+            return !in_array($st, $ineligible, true);
+        });
+
+        return array_values($eligibleList);
     }
 
     public function index(Request $request)
@@ -644,7 +251,7 @@ class MatchingController extends Controller
         $statusFilter = $request->input('status', 'All');
         $searchQuery = $request->input('search');
         $supplierFilter = $request->input('supplier');
-        $sortBy = $request->input('sort_by', 'date_desc');
+        $sortBy = $request->input('sort_by', 'created_desc');
 
         $warehouseFilter = $request->input('warehouse');
         $commodityFilter = $request->input('commodity');
@@ -653,9 +260,7 @@ class MatchingController extends Controller
         $maxAmount = $request->input('max_amount');
 
         $dbRecords = $this->getDatabaseRecords();
-        $mockRecords = $this->getMockData();
-
-        $allData = array_merge($dbRecords, $mockRecords);
+        $allData = $dbRecords;
 
         // Fetch DB & Session Cancelled Records
         $cancelledPosMap = PurchaseOrder::where('status', 'cancelled')->pluck('status', 'po_number')->toArray();
@@ -748,6 +353,8 @@ class MatchingController extends Controller
 
         usort($filteredData, function ($a, $b) use ($sortBy) {
             switch ($sortBy) {
+                case 'created_asc':
+                    return strtotime($a['created_at'] ?? $a['po_date']) <=> strtotime($b['created_at'] ?? $b['po_date']);
                 case 'date_asc':
                     return strtotime($a['po_date']) <=> strtotime($b['po_date']);
                 case 'po_asc':
@@ -762,9 +369,10 @@ class MatchingController extends Controller
                     return abs($b['variance']) <=> abs($a['variance']);
                 case 'status':
                     return strcmp($a['status'], $b['status']);
+                case 'created_desc':
                 case 'date_desc':
                 default:
-                    return strtotime($b['po_date']) <=> strtotime($a['po_date']);
+                    return strtotime($b['created_at'] ?? $b['po_date']) <=> strtotime($a['created_at'] ?? $a['po_date']);
             }
         });
 
@@ -788,6 +396,43 @@ class MatchingController extends Controller
         }
 
         $availablePos = $this->getAvailablePos();
+        $dbProducts = \App\Models\Product::all(['name', 'base_price', 'sku'])->map(function ($p) {
+            return [
+                'name' => $p->name,
+                'unit_price' => (float)$p->base_price,
+                'sku' => $p->sku,
+            ];
+        })->toArray();
+
+        $mockProducts = [
+            ['name' => 'RICE', 'unit_price' => 2500.00],
+            ['name' => 'White Maize', 'unit_price' => 2845.00],
+            ['name' => 'Soybeans', 'unit_price' => 5200.00],
+            ['name' => 'Wheat', 'unit_price' => 1937.50],
+            ['name' => 'Cotton Seed', 'unit_price' => 3472.00],
+            ['name' => 'Sunflower', 'unit_price' => 4120.00],
+            ['name' => 'Yellow Maize', 'unit_price' => 1704.00],
+            ['name' => 'Fertilizers & Nutrients', 'unit_price' => 3172.32],
+            ['name' => 'Hybrid Crop Seeds', 'unit_price' => 5011.66],
+            ['name' => 'Organic Pesticides', 'unit_price' => 941.68],
+            ['name' => 'Storage Crates', 'unit_price' => 1164.84],
+            ['name' => 'Tractor Fleet Servicing', 'unit_price' => 17700.00],
+            ['name' => 'Soil Analysis & Audit', 'unit_price' => 25000.00],
+        ];
+
+        $productsList = [];
+        $seenNames = [];
+        foreach (array_merge($dbProducts, $mockProducts) as $prod) {
+            $n = trim($prod['name'] ?? '');
+            if ($n && !in_array(strtolower($n), $seenNames, true)) {
+                $seenNames[] = strtolower($n);
+                $productsList[] = [
+                    'name' => $n,
+                    'unit_price' => (float)($prod['unit_price'] ?? 0),
+                    'sku' => $prod['sku'] ?? null,
+                ];
+            }
+        }
 
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
@@ -795,6 +440,7 @@ class MatchingController extends Controller
                 'count' => count($filteredData),
                 'selected' => $selectedRecord,
                 'availablePos' => $availablePos,
+                'productsList' => $productsList,
             ]);
         }
 
@@ -808,6 +454,7 @@ class MatchingController extends Controller
             'currentSupplier' => $supplierFilter,
             'currentSort' => $sortBy,
             'availablePos' => $availablePos,
+            'productsList' => $productsList,
         ]);
     }
 
@@ -849,6 +496,7 @@ class MatchingController extends Controller
             'po_number' => $po->po_number,
             'supplier' => $supplierName,
             'total' => (float)$po->total,
+            'warehouse' => 'Harare Central Depot',
             'items' => $items,
         ]);
     }
@@ -859,7 +507,6 @@ class MatchingController extends Controller
         $validated = $request->validate([
             'receipt_type' => 'nullable|string', // 'goods' or 'services'
             'po_number' => 'required|string',
-            'grn_number' => 'required|string',
             'received_at' => 'required',
             'receiving_location' => 'nullable|string',
             'invoice_number' => 'nullable|string',
@@ -872,15 +519,8 @@ class MatchingController extends Controller
 
         $receiptType = $validated['receipt_type'] ?? 'goods';
 
-        // Prevent duplicate GRN / SRN number
-        if (DeliveryReceipt::where('dr_number', $validated['grn_number'])->exists()) {
-            if ($request->ajax() || $request->wantsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Duplicate Receipt Record: Receipt number ' . $validated['grn_number'] . ' has already been recorded.',
-                ], 422);
-            }
-        }
+        // Auto-generate unique sequential GRN or SRN number upon submission
+        $grnNumber = $this->generateSequentialGrnNumber($receiptType);
 
         $po = PurchaseOrder::where('po_number', $validated['po_number'])->first();
         if (!$po) {
@@ -915,7 +555,7 @@ class MatchingController extends Controller
         $receivedBy = Auth::check() ? Auth::user()->name : ($receiptType === 'services' ? 'Service Inspector' : 'Receiving Agent');
 
         $dr = DeliveryReceipt::create([
-            'dr_number' => $validated['grn_number'],
+            'dr_number' => $grnNumber,
             'purchase_order_id' => $po->id,
             'received_at' => Carbon::parse($validated['received_at']),
             'items' => [
@@ -950,16 +590,16 @@ class MatchingController extends Controller
         $variance = 0;
         if ($inv) {
             $variance = (float)$inv->amount - $poTotal;
-            if (abs($variance) < 0.01 && empty($discrepancies)) {
+            if ($variance > 0.01) {
+                $status = 'Mismatch';
+                $discrepancies[] = 'Total Amount Over-Invoiced: Invoice Amount (₱' . number_format($inv->amount, 2) . ') exceeds PO Value (₱' . number_format($poTotal, 2) . ') by +₱' . number_format($variance, 2) . '.';
+            } else if ($variance < -0.01) {
+                $status = 'Partial Match';
+                $discrepancies[] = 'Under-Invoiced: Invoice Amount (₱' . number_format($inv->amount, 2) . ') is less than PO Value (₱' . number_format($poTotal, 2) . ') by -₱' . number_format(abs($variance), 2) . '.';
+            } else {
                 $status = 'Matched';
                 $po->status = 'received';
                 $po->save();
-            } else if ($variance > 0) {
-                $status = 'Mismatch';
-                $discrepancies[] = 'Total Amount Over-Invoiced: Invoice Amount (₱' . number_format($inv->amount, 2) . ') exceeds PO Value (₱' . number_format($poTotal, 2) . ') by ₱' . number_format($variance, 2) . '.';
-            } else {
-                $status = 'Partial Match';
-                $discrepancies[] = 'Quantity Shortage / Partial Match: Invoice Amount (₱' . number_format($inv->amount, 2) . ') differs from PO Value (₱' . number_format($poTotal, 2) . ').';
             }
         } else {
             $status = 'Pending Invoice';
@@ -968,15 +608,60 @@ class MatchingController extends Controller
 
         $receiptLabel = $receiptType === 'services' ? 'Service Entry Sheet' : 'Goods Receipt Note';
 
+        $supplierName = $po->supplier ? ($po->supplier->supplier_name ?? $po->supplier->name ?? 'Vendor') : 'Vendor';
+        $words = explode(' ', $supplierName);
+        $initials = strtoupper(substr($words[0] ?? 'V', 0, 1) . substr($words[1] ?? '', 0, 1));
+        $commodityLabel = !empty($lines) ? ($lines[0]['name'] ?? 'Procured Items') : ($receiptType === 'services' ? 'Service Receipt' : 'Goods Receipt');
+
+        $recordData = [
+            'id' => $dr->id,
+            'po_number' => $po->po_number,
+            'po_id' => $po->id,
+            'po_date' => $po->created_at ? $po->created_at->format('d M Y') : now()->format('d M Y'),
+            'supplier' => $supplierName,
+            'commodity' => $commodityLabel,
+            'receipt_type' => $receiptType,
+            'payment_terms' => 'Net 30',
+            'warehouse' => $validated['receiving_location'] ?? ($receiptType === 'services' ? 'Service Site' : 'Harare Central Depot'),
+            'grn_number' => $dr->dr_number,
+            'grn_date' => $dr->received_at ? Carbon::parse($dr->received_at)->format('d M Y') : now()->format('d M Y'),
+            'invoice_number' => $inv ? $inv->invoice_number : null,
+            'invoice_date' => $inv && $inv->received_at ? Carbon::parse($inv->received_at)->format('d M Y') : null,
+            'po_amount' => $poTotal,
+            'invoice_amount' => $inv ? (float)$inv->amount : 0.0,
+            'variance' => $variance,
+            'status' => $status,
+            'cancellation_reason' => null,
+            'cancelled_by' => null,
+            'cancelled_at' => null,
+            'supplier_initials' => $initials ?: 'GR',
+            'payment_approvable' => ($status === 'Matched'),
+            'discrepancies' => array_values(array_unique($discrepancies)),
+            'matched_fields' => ($status === 'Matched') ? ['PO Number: ' . $po->po_number, 'Supplier: ' . $supplierName, 'Amounts Reconciled'] : ['PO Number: ' . $po->po_number, 'Supplier: ' . $supplierName],
+            'received_by' => $receivedBy,
+            'received_at' => $dr->received_at ? Carbon::parse($dr->received_at)->format('Y-m-d H:i:s') : now()->format('Y-m-d H:i:s'),
+            'created_at' => $dr->created_at ? $dr->created_at->format('Y-m-d H:i:s') : now()->format('Y-m-d H:i:s'),
+            'updated_at' => $dr->updated_at ? $dr->updated_at->format('Y-m-d H:i:s') : now()->format('Y-m-d H:i:s'),
+            'approved_by' => null,
+            'approved_at' => null,
+        ];
+
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'message' => "{$receiptLabel} recorded and 3-way matched successfully!",
+                'record' => $recordData,
                 'grn_number' => $dr->dr_number,
+                'po_number' => $po->po_number,
+                'supplier' => $supplierName,
                 'status' => $status,
                 'variance' => $variance,
                 'discrepancies' => array_values(array_unique($discrepancies)),
                 'received_by' => $receivedBy,
+                'created_at' => $dr->created_at ? $dr->created_at->format('Y-m-d H:i:s') : now()->format('Y-m-d H:i:s'),
+                'updated_at' => $dr->updated_at ? $dr->updated_at->format('Y-m-d H:i:s') : now()->format('Y-m-d H:i:s'),
+                'po_amount' => $poTotal,
+                'po_date' => $po->created_at ? $po->created_at->format('d M Y') : now()->format('d M Y'),
             ]);
         }
 
@@ -991,7 +676,7 @@ class MatchingController extends Controller
             return response()->json(['success' => false, 'message' => 'Purchase Order number is required.'], 422);
         }
 
-        $allData = array_merge($this->getDatabaseRecords(), $this->getMockData());
+        $allData = $this->getDatabaseRecords();
         $record = collect($allData)->firstWhere('po_number', $poNumber);
 
         if (!$record) {
@@ -1029,15 +714,15 @@ class MatchingController extends Controller
             if (abs($record['variance']) < 0.01 && empty($discrepancies)) {
                 $status = 'Matched';
                 $paymentApprovable = true;
-                $matchedFields[] = 'Amounts Fully Reconciled ($' . number_format($record['po_amount'], 2) . ')';
+                $matchedFields[] = 'Amounts Fully Reconciled (₱' . number_format($record['po_amount'], 2) . ')';
                 $matchedFields[] = 'Supplier & Document IDs Matched';
             } else {
                 $status = $record['variance'] < 0 ? 'Partial Match' : 'Mismatch';
                 $paymentApprovable = false;
                 if ($record['variance'] > 0 && !collect($discrepancies)->contains(fn($d) => str_contains($d, 'exceeds'))) {
-                    $discrepancies[] = 'Total Amount Over-Invoiced: Invoice Amount ($' . number_format($record['invoice_amount'], 2) . ') exceeds PO Value ($' . number_format($record['po_amount'], 2) . ') by $' . number_format($record['variance'], 2) . '.';
+                    $discrepancies[] = 'Total Amount Over-Invoiced: Invoice Amount (₱' . number_format($record['invoice_amount'], 2) . ') exceeds PO Value (₱' . number_format($record['po_amount'], 2) . ') by ₱' . number_format($record['variance'], 2) . '.';
                 } else if ($record['variance'] < 0 && !collect($discrepancies)->contains(fn($d) => str_contains($d, 'shortage') || str_contains($d, 'Under-received'))) {
-                    $discrepancies[] = 'Quantity Shortage: Received value is less than PO Value by $' . number_format(abs($record['variance']), 2) . '.';
+                    $discrepancies[] = 'Quantity Shortage: Received value is less than PO Value by ₱' . number_format(abs($record['variance']), 2) . '.';
                 }
             }
         } else {
@@ -1061,7 +746,7 @@ class MatchingController extends Controller
     // Get Matching Details for Modal
     public function getMatchingDetails($poNumber)
     {
-        $allData = array_merge($this->getDatabaseRecords(), $this->getMockData());
+        $allData = $this->getDatabaseRecords();
         $record = collect($allData)->firstWhere('po_number', $poNumber);
 
         if (!$record) {
@@ -1096,7 +781,7 @@ class MatchingController extends Controller
     // Approve Payments ONLY for Validated Transactions
     public function approvePayment($id)
     {
-        $allData = array_merge($this->getDatabaseRecords(), $this->getMockData());
+        $allData = $this->getDatabaseRecords();
         
         $targetRecord = null;
         foreach ($allData as $r) {
@@ -1124,6 +809,7 @@ class MatchingController extends Controller
             $itemsData['approved_by'] = $approverName;
             $itemsData['approved_at'] = $approvedAt;
             $dr->items = $itemsData;
+            $dr->touch();
             $dr->save();
 
             if ($dr->purchaseOrder) {
@@ -1137,6 +823,7 @@ class MatchingController extends Controller
             'message' => 'Payment validated and approved successfully!',
             'approved_by' => $approverName,
             'approved_at' => $approvedAt,
+            'updated_at' => $dr && $dr->updated_at ? $dr->updated_at->format('Y-m-d H:i:s') : now()->format('Y-m-d H:i:s'),
             'status' => 'Approved for Payment'
         ]);
     }
@@ -1206,6 +893,7 @@ class MatchingController extends Controller
             $itemsData['cancelled_by'] = $cancelledBy;
             $itemsData['cancelled_at'] = $cancelledAt;
             $dr->items = $itemsData;
+            $dr->touch();
             $dr->save();
         }
 
@@ -1228,7 +916,37 @@ class MatchingController extends Controller
             'cancelled_by' => $cancelledBy,
             'cancelled_at' => $cancelledAt,
             'cancellation_reason' => $fullReason,
+            'updated_at' => $cancelledAt,
             'status' => 'Cancelled'
         ]);
+    }
+
+    private function generateSequentialGrnNumber($receiptType = 'goods')
+    {
+        $prefix = ($receiptType === 'services') ? 'SRN' : 'GRN';
+        $year = date('Y');
+        $pattern = "{$prefix}-{$year}-%";
+
+        $latest = DeliveryReceipt::where('dr_number', 'LIKE', $pattern)
+            ->orderBy('id', 'desc')
+            ->pluck('dr_number')
+            ->first();
+
+        $nextSeq = 1;
+        if ($latest) {
+            $parts = explode('-', $latest);
+            if (count($parts) >= 3 && is_numeric(end($parts))) {
+                $nextSeq = ((int)end($parts)) + 1;
+            }
+        }
+
+        $grnNumber = sprintf('%s-%s-%05d', $prefix, $year, $nextSeq);
+
+        while (DeliveryReceipt::where('dr_number', $grnNumber)->exists()) {
+            $nextSeq++;
+            $grnNumber = sprintf('%s-%s-%05d', $prefix, $year, $nextSeq);
+        }
+
+        return $grnNumber;
     }
 }
