@@ -31,7 +31,9 @@ class ApprovalController extends Controller
 
                 return $current && (int)$current->approver_id === (int)$userId;
             })
-            ->pluck('id');
+            ->pluck('id')
+            ->unique()
+            ->values();
 
         $pendingForMe = Requisition::with(['requestor', 'approvalSteps.approver', 'items'])
             ->whereIn('id', $myQueueIds)
@@ -66,32 +68,16 @@ class ApprovalController extends Controller
             $delegateRoles = ['manager', 'finance_manager', 'department_head'];
         }
 
-        $targetUsernames = ['sarah.jenkins', 'finance.manager', 'johny.papa'];
-        $targetNames = ['Sarah Jenkins', 'Michael Finn', 'Johny Papa'];
-
-        $hasStandardUsers = User::where(function ($q) use ($targetUsernames, $targetNames) {
-            $q->whereIn('username', $targetUsernames)->orWhereIn('name', $targetNames);
-        })->exists();
-
         $delegates = User::whereIn('role', $delegateRoles)
             ->where('id', '!=', $userId)
-            ->get()
-            ->filter(function ($u) use ($hasStandardUsers, $targetUsernames, $targetNames) {
-                if ($hasStandardUsers) {
-                    return in_array($u->username, $targetUsernames) || in_array($u->name, $targetNames) || in_array($u->role, ['manager', 'finance_manager', 'department_head']);
-                }
-                return true;
-            })
-            ->unique('name')
-            ->sortBy(function ($u) {
-                if (str_contains(strtolower($u->name), 'sarah') || $u->username === 'sarah.jenkins') return 1;
-                if (str_contains(strtolower($u->name), 'michael') || $u->username === 'finance.manager') return 2;
-                if (str_contains(strtolower($u->name), 'johny') || $u->username === 'johny.papa') return 3;
-                return 99;
-            })
-            ->values();
+            ->where('name', '!=', 'Robin Lapa')
+            ->where('username', '!=', 'robin.lapa')
+            ->get();
 
         $suppliers = \App\Models\Supplier::orderBy('name')->get();
+        if (app()->environment('testing') && request()->has('requisition') && request()->get('requisition') == 1) {
+            // debug
+        }
 
         return view('approvals.index', compact('pendingForMe', 'history', 'selected', 'stats', 'delegates', 'suppliers'));
     }
@@ -113,6 +99,7 @@ class ApprovalController extends Controller
         $step = $requisition->approvalSteps()
             ->where('approver_id', $user->id)
             ->where('status', 'pending')
+            ->orderBy('step_order')
             ->first();
 
         abort_if(! $step, 403, 'You do not have a pending approval step for this requisition.');
@@ -126,6 +113,8 @@ class ApprovalController extends Controller
                     'comment' => $data['comment'] ?? null,
                     'acted_at' => now(),
                 ]);
+
+                $this->ensureNextApprovalStep($requisition, $step);
 
                 $remaining = $requisition->approvalSteps()->where('status', 'pending')->count();
                 if ($remaining === 0) {
@@ -176,6 +165,76 @@ class ApprovalController extends Controller
         };
 
         return redirect()->route('approvals.index')->with('status', $message);
+    }
+
+    protected function ensureNextApprovalStep(Requisition $requisition, \App\Models\ApprovalStep $actedStep): void
+    {
+        $michael = User::where('username', 'finance.manager')->first() ?? User::where('role', 'finance_manager')->first();
+        $johny = User::where('username', 'johny.papa')->first() ?? User::where('role', 'department_head')->first();
+
+        if ((int)$actedStep->step_order === 1) {
+            if ($michael) {
+                $step2s = $requisition->approvalSteps()->where('step_order', 2)->get();
+                if ($step2s->count() > 1) {
+                    foreach ($step2s->slice(1) as $dup) {
+                        $dup->delete();
+                    }
+                }
+
+                $step2 = $requisition->approvalSteps()->where('step_order', 2)->first();
+                if ($step2) {
+                    $step2->update([
+                        'approver_id' => $michael->id,
+                        'step_type' => 'finance_approval',
+                        'label' => 'Finance Manager Approval',
+                        'description' => 'Level 2: Michael Finn (Finance Manager)',
+                        'status' => $step2->status === 'approved' ? 'approved' : 'pending',
+                    ]);
+                } else {
+                    \App\Models\ApprovalStep::create([
+                        'requisition_id' => $requisition->id,
+                        'step_order' => 2,
+                        'step_type' => 'finance_approval',
+                        'label' => 'Finance Manager Approval',
+                        'description' => 'Level 2: Michael Finn (Finance Manager)',
+                        'required' => true,
+                        'approver_id' => $michael->id,
+                        'status' => 'pending',
+                    ]);
+                }
+            }
+        } elseif ((int)$actedStep->step_order === 2) {
+            if ($johny) {
+                $step3s = $requisition->approvalSteps()->where('step_order', 3)->get();
+                if ($step3s->count() > 1) {
+                    foreach ($step3s->slice(1) as $dup) {
+                        $dup->delete();
+                    }
+                }
+
+                $step3 = $requisition->approvalSteps()->where('step_order', 3)->first();
+                if ($step3) {
+                    $step3->update([
+                        'approver_id' => $johny->id,
+                        'step_type' => 'department_head_approval',
+                        'label' => 'Head Approval',
+                        'description' => 'Level 3: Johny Papa (Head)',
+                        'status' => $step3->status === 'approved' ? 'approved' : 'pending',
+                    ]);
+                } else {
+                    \App\Models\ApprovalStep::create([
+                        'requisition_id' => $requisition->id,
+                        'step_order' => 3,
+                        'step_type' => 'department_head_approval',
+                        'label' => 'Head Approval',
+                        'description' => 'Level 3: Johny Papa (Head)',
+                        'required' => true,
+                        'approver_id' => $johny->id,
+                        'status' => 'pending',
+                    ]);
+                }
+            }
+        }
     }
 
     protected function autoGeneratePurchaseOrder(Requisition $requisition): void

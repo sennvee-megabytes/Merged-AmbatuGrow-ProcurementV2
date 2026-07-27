@@ -257,16 +257,18 @@ class MassProcurementSeeder extends Seeder
             ]);
 
             // Add Approval Steps
-            $mgr = $managers->random();
-            $head = $deptHeads->random();
-            $fin = $financeManagers->random();
+            $sarah = User::where('username', 'sarah.jenkins')->first() ?? $managers->first();
+            $michael = User::where('username', 'finance.manager')->first() ?? $financeManagers->first();
+            $johny = User::where('username', 'johny.papa')->first() ?? $deptHeads->first();
 
             ApprovalStep::create([
                 'requisition_id' => $req->id,
                 'step_order' => 1,
                 'step_type' => 'manager_approval',
-                'label' => 'Manager approval',
-                'approver_id' => $mgr->id,
+                'label' => 'Project Manager Approval',
+                'description' => 'Level 1: Sarah Jenkins (Project Manager)',
+                'required' => true,
+                'approver_id' => $sarah?->id,
                 'status' => $status === 'approved' ? 'approved' : ($status === 'rejected' ? 'rejected' : 'pending'),
                 'comment' => $status === 'approved' ? 'Looks good.' : ($status === 'rejected' ? 'budget exceeded' : null),
                 'acted_at' => $status !== 'pending_approval' ? now()->subDays(1) : null,
@@ -275,9 +277,11 @@ class MassProcurementSeeder extends Seeder
             ApprovalStep::create([
                 'requisition_id' => $req->id,
                 'step_order' => 2,
-                'step_type' => 'department_head_approval',
-                'label' => 'Department Head Approval',
-                'approver_id' => $head->id,
+                'step_type' => 'finance_approval',
+                'label' => 'Finance Manager Approval',
+                'description' => 'Level 2: Michael Finn (Finance Manager)',
+                'required' => true,
+                'approver_id' => $michael?->id,
                 'status' => $status === 'approved' ? 'approved' : 'pending',
                 'acted_at' => $status === 'approved' ? now()->subDays(1) : null,
             ]);
@@ -285,9 +289,11 @@ class MassProcurementSeeder extends Seeder
             ApprovalStep::create([
                 'requisition_id' => $req->id,
                 'step_order' => 3,
-                'step_type' => 'finance_approval',
-                'label' => 'Finance approval',
-                'approver_id' => $fin->id,
+                'step_type' => 'department_head_approval',
+                'label' => 'Head Approval',
+                'description' => 'Level 3: Johny Papa (Head)',
+                'required' => true,
+                'approver_id' => $johny?->id,
                 'status' => $status === 'approved' ? 'approved' : 'pending',
                 'acted_at' => $status === 'approved' ? now() : null,
             ]);

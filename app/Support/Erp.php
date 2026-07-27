@@ -148,7 +148,7 @@ class Erp
                 'id' => 3,
                 'code' => 'PR-2026-092',
                 'title' => 'Office supplies',
-                'requestor' => 'Robin lapa',
+                'requestor' => 'Emily Johnson',
                 'department' => 'Ops',
                 'purpose' => 'Routine office supplies restock.',
                 'needed_by' => '2026-07-10',

@@ -155,16 +155,20 @@ class RequisitionController extends Controller
         ];
 
         DB::transaction(function () use ($requisition, $steps) {
-            $requisition->approvalSteps()->delete();
             foreach ($steps as $s) {
-                ApprovalStep::create(array_merge($s, ['requisition_id' => $requisition->id]));
+                $existing = $requisition->approvalSteps()->where('step_order', $s['step_order'])->first();
+                if (!$existing) {
+                    ApprovalStep::create(array_merge($s, ['requisition_id' => $requisition->id]));
+                }
             }
 
-            $requisition->update([
-                'approval_type' => 'sequential',
-                'status' => 'pending_approval',
-                'submitted_at' => now(),
-            ]);
+            if ($requisition->status === 'draft' || empty($requisition->status)) {
+                $requisition->update([
+                    'approval_type' => 'sequential',
+                    'status' => 'pending_approval',
+                    'submitted_at' => $requisition->submitted_at ?? now(),
+                ]);
+            }
         });
     }
 

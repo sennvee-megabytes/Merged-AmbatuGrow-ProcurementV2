@@ -13,9 +13,9 @@ class RequisitionDemoSeeder extends Seeder
     public function run(): void
     {
         $requestor = User::where('username', 'emily.johnson')->first();
-        $manager = User::where('username', 'jj.miranda')->first();
-        $deptHead = User::where('username', 'johny.papa')->first();
-        $finance = User::where('username', 'finance.manager')->first();
+        $sarah = User::where('username', 'sarah.jenkins')->first() ?? User::where('role', 'manager')->first();
+        $michael = User::where('username', 'finance.manager')->first() ?? User::where('role', 'finance_manager')->first();
+        $johny = User::where('username', 'johny.papa')->first() ?? User::where('role', 'department_head')->first();
 
         if (! $requestor || Requisition::where('code', 'PR-2026-00125')->exists()) {
             return;
@@ -60,32 +60,32 @@ class RequisitionDemoSeeder extends Seeder
             'requisition_id' => $requisition->id,
             'step_order' => 1,
             'step_type' => 'manager_approval',
-            'label' => 'Manager Approval',
-            'description' => "First level approval from the requestor's manager",
+            'label' => 'Project Manager Approval',
+            'description' => 'Level 1: Sarah Jenkins (Project Manager)',
             'required' => true,
-            'approver_id' => $manager->id,
+            'approver_id' => $sarah?->id,
             'status' => 'pending',
         ]);
 
         ApprovalStep::create([
             'requisition_id' => $requisition->id,
             'step_order' => 2,
-            'step_type' => 'department_head_approval',
-            'label' => 'Department Head Approval',
-            'description' => 'Approval from the head of the department',
+            'step_type' => 'finance_approval',
+            'label' => 'Finance Manager Approval',
+            'description' => 'Level 2: Michael Finn (Finance Manager)',
             'required' => true,
-            'approver_id' => $deptHead->id,
+            'approver_id' => $michael?->id,
             'status' => 'pending',
         ]);
 
         ApprovalStep::create([
             'requisition_id' => $requisition->id,
             'step_order' => 3,
-            'step_type' => 'finance_approval',
-            'label' => 'Finance Approval',
-            'description' => 'Final approval from Finance Department',
+            'step_type' => 'department_head_approval',
+            'label' => 'Head Approval',
+            'description' => 'Level 3: Johny Papa (Head)',
             'required' => true,
-            'approver_id' => $finance->id,
+            'approver_id' => $johny?->id,
             'status' => 'pending',
         ]);
     }
