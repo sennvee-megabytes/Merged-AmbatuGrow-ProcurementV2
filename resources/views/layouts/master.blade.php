@@ -6,6 +6,16 @@
         ->sortBy('name')
         ->values();
     $catalogProducts = \App\Models\Product::with('uom')->orderBy('name')->get();
+
+    // Requisition notification badge — count pending approval steps for the current user
+    $pendingApprovalCount = 0;
+    if (Auth::check()) {
+        $pendingApprovalCount = \App\Models\Requisition::where('status', 'pending_approval')
+            ->whereHas('approvalSteps', function ($q) {
+                $q->where('approver_id', Auth::id())->where('status', 'pending');
+            })
+            ->count();
+    }
 @endphp
 <!DOCTYPE html>
 <html lang="en">
@@ -704,6 +714,9 @@
                         <div class="absolute left-0 top-1/4 bottom-1/4 w-1 bg-white rounded-r"></div>
                     @endif
                     <i data-lucide="clipboard-list" class="w-5 h-5"></i>
+                    @if (!empty($pendingApprovalCount) && $pendingApprovalCount > 0)
+                        <span class="absolute -top-1 -right-1 inline-flex min-w-[18px] h-5 rounded-full bg-red-500 text-[11px] font-semibold text-white items-center justify-center px-1.5">{{ $pendingApprovalCount }}</span>
+                    @endif
                 </a>
                 
                 <!-- Supplier Directory -->
@@ -816,10 +829,6 @@
                             <i class="fa-solid fa-circle-check w-5 text-center text-base shrink-0"></i>
                             <span>Active Suppliers</span>
                         </a>
-                        <a href="{{ route('suppliers.pending') }}" class="flex items-center justify-start gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all w-full text-left {{ request()->routeIs('suppliers.pending') ? 'bg-[#235c2b] text-white shadow-sm' : 'text-slate-800 hover:bg-[#e8ece6] hover:text-slate-900' }}">
-                            <i class="fa-solid fa-clock w-5 text-center text-base shrink-0"></i>
-                            <span>Pending Verification</span>
-                        </a>
                     </nav>
                 </div>
 
@@ -880,19 +889,6 @@
                         <div class="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-slate-800 rotate-45"></div>
                         <span>✅</span>
                         <span>Active Suppliers</span>
-                    </div>
-                </div>
-
-                <!-- Pending Verification Tooltip -->
-                <div class="relative group/tooltip">
-                    <a href="{{ route('suppliers.pending') }}" 
-                       class="w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-200 ease-in-out hover:scale-105 {{ request()->routeIs('suppliers.pending') ? 'bg-[#235c2b] text-white shadow-md' : 'text-slate-700 bg-white/50 hover:bg-[#e9f5ee] hover:text-[#1f5c3d] shadow-sm' }}">
-                        <span class="text-lg select-none">⏳</span>
-                    </a>
-                    <div class="pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-3 z-50 whitespace-nowrap rounded-lg bg-slate-800 px-3 py-2 text-sm font-semibold text-white shadow-lg opacity-0 translate-x-2 transition-all duration-200 ease-in-out group-hover/tooltip:opacity-100 group-hover/tooltip:translate-x-0 flex items-center gap-2">
-                        <div class="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-slate-800 rotate-45"></div>
-                        <span>⏳</span>
-                        <span>Pending Verification</span>
                     </div>
                 </div>
 

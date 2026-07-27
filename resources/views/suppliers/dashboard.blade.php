@@ -6,7 +6,7 @@
 @section('content')
 
     {{-- KPI Cards --}}
-    <div class="grid grid-cols-4 gap-4 mb-6">
+    <div class="grid grid-cols-3 gap-4 mb-6">
         {{-- Total Suppliers --}}
         <a href="{{ route('suppliers.index') }}" class="kpi-card hover:shadow-md transition-shadow">
             <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
@@ -15,11 +15,14 @@
                 </svg>
             </div>
             <div>
-                <div class="text-xs font-medium text-gray-500 mb-0.5">Total Supplier</div>
+                <div class="text-xs font-medium text-gray-500 mb-0.5">Total Suppliers</div>
                 <div class="text-2xl font-bold text-gray-900">{{ $stats['total'] }}</div>
+                @php
+                    $thisMonthCount = \App\Models\Supplier::where('created_at', '>=', now()->startOfMonth())->count();
+                @endphp
                 <div class="text-xs text-green-600 font-medium mt-1 flex items-center gap-1">
                     <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
-                    6 this month
+                    {{ $thisMonthCount }} this month
                 </div>
             </div>
         </a>
@@ -38,20 +41,6 @@
             </div>
         </a>
 
-        {{-- Pending --}}
-        <a href="{{ route('suppliers.pending') }}" class="kpi-card hover:shadow-md transition-shadow">
-            <div class="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center shrink-0">
-                <svg class="w-5 h-5 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-            </div>
-            <div>
-                <div class="text-xs font-medium text-gray-500 mb-0.5">Pending Verification</div>
-                <div class="text-2xl font-bold text-gray-900">{{ $stats['pending'] }}</div>
-                <div class="text-xs text-orange-500 font-medium mt-1">Requires review</div>
-            </div>
-        </a>
-
         {{-- Blacklisted --}}
         <a href="{{ route('suppliers.blacklisted') }}" class="kpi-card hover:shadow-md transition-shadow">
             <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center shrink-0">
@@ -66,6 +55,7 @@
             </div>
         </a>
     </div>
+
 
     {{-- Middle Row --}}
     <div class="grid grid-cols-3 gap-5 mb-5">
@@ -94,7 +84,7 @@
                             <div class="flex items-center gap-3">
                                 <div class="avatar"></div>
                                 <div>
-                                    <div class="supplier-name">{{ $s['name'] }}</div>
+                                <div class="supplier-name">{{ $s['supplier_name'] ?? $s['name'] }}</div>
                                     <div class="supplier-id">{{ $s['supplier_id'] }}</div>
                                 </div>
                             </div>
@@ -167,12 +157,12 @@
             <div class="card flex-1">
                 <h2 class="card-title">Top Suppliers  (by Orders)</h2>
                 <ol class="space-y-3">
-                    @foreach ($suppliers as $i => $s)
+                    @foreach ($topSuppliers as $i => $s)
                     <li class="flex items-center gap-3">
                         <span class="text-[13px] font-semibold text-gray-500 w-4 shrink-0">{{ $i+1 }}</span>
                         <div class="avatar-sm shrink-0"></div>
                         <div class="flex-1 min-w-0">
-                            <div class="text-[13px] font-semibold text-gray-800 truncate">{{ $s['name'] }}</div>
+                            <div class="text-[13px] font-semibold text-gray-800 truncate">{{ $s['supplier_name'] ?? $s['name'] }}</div>
                             <div class="progress-bar mt-1" style="width: 100%">
                                 <div style="width: {{ max(20, 100 - ($i * 22)) }}%"></div>
                             </div>

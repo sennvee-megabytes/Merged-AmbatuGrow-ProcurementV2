@@ -101,12 +101,12 @@
                 <h2 class="card-title font-bold text-slate-900 mb-4 text-base">Company Information</h2>
                 <dl>
                     @foreach ([
-                        'Company Name'  => $supplier['name'],
-                        'Business Type' => $supplier['business_type'],
-                        'Address'       => $supplier['address'],
-                        'Phone'         => $supplier['phone'],
-                        'Email'         => $supplier['email'],
-                        'Date Added'    => $supplier['since'],
+                        'Company Name'  => $supplier['supplier_name'] ?? $supplier['name'] ?? 'N/A',
+                        'Business Type' => $supplier['business_type'] ?? 'N/A',
+                        'Address'       => $supplier['address'] ?? 'N/A',
+                        'Phone'         => $supplier['phone'] ?? 'N/A',
+                        'Email'         => $supplier['email'] ?? 'N/A',
+                        'Date Added'    => $supplier['since'] ?? 'N/A',
                     ] as $label => $value)
                     <div class="info-row flex justify-between py-2.5 border-b border-slate-100 {{ $loop->last ? '!border-0' : '' }}">
                         <dt class="text-xs font-semibold text-slate-600">{{ $label }}</dt>
@@ -132,11 +132,11 @@
                     <div class="space-y-2.5">
                         <div class="flex items-center gap-3 text-xs font-medium text-slate-700">
                             <i data-lucide="phone" class="w-4 h-4 text-slate-400 shrink-0"></i>
-                            {{ $supplier['phone'] }}
+                            {{ $supplier['contact_phone'] ?? $supplier['phone'] ?? 'N/A' }}
                         </div>
                         <div class="flex items-center gap-3 text-xs font-medium text-slate-700">
                             <i data-lucide="mail" class="w-4 h-4 text-slate-400 shrink-0"></i>
-                            {{ $supplier['email'] }}
+                            {{ $supplier['contact_email'] ?? $supplier['email'] ?? 'N/A' }}
                         </div>
                     </div>
                 </div>

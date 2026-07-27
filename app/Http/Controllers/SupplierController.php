@@ -14,25 +14,41 @@ use Illuminate\Support\Str;
 
 class SupplierController extends Controller
 {
+    public function __construct()
+    {
+        Supplier::whereIn('status', ['Pending Verification', 'Pending'])
+            ->update(['status' => 'Active']);
+    }
+
     protected function stats(): array
     {
-        $total = Supplier::count();
+        $blacklistedInSuppliers = Supplier::whereIn('status', ['Blacklisted', 'Blocked'])
+            ->pluck('supplier_id')
+            ->filter()
+            ->unique()
+            ->toArray();
+
+        // Standalone blacklisted entries that are NOT already tracked as a Supplier row
+        $standaloneBlacklistedCount = BlacklistedSupplier::whereNotIn('supplier_code', $blacklistedInSuppliers)->count();
+
+        $totalInSupplierTable    = Supplier::count();
+        $activeCount             = Supplier::where('status', 'Active')->count();
+        $blacklistedCount        = Supplier::whereIn('status', ['Blacklisted', 'Blocked'])->count() + $standaloneBlacklistedCount;
 
         return [
-            'total' => $total,
-            'active' => Supplier::where('status', 'Active')->count(),
-            'pending' => Supplier::where('status', 'Pending Verification')->count(),
-            'blacklisted' => Supplier::where('status', 'Blacklisted')->count()
-                + BlacklistedSupplier::count(),
+            'total'       => $totalInSupplierTable + $standaloneBlacklistedCount,
+            'active'      => $activeCount,
+            'pending'     => 0,
+            'blacklisted' => $blacklistedCount,
         ];
     }
 
     /**
-     * Combines suppliers with status=Blacklisted with standalone blacklist-only entries.
+     * Combines suppliers with status=Blacklisted/Blocked with standalone blacklist-only entries.
      */
     protected function blacklisted($riskFilter = null)
     {
-        $fromSuppliersQuery = Supplier::where('status', 'Blacklisted');
+        $fromSuppliersQuery = Supplier::whereIn('status', ['Blacklisted', 'Blocked']);
         if ($riskFilter && $riskFilter !== 'All Risk Levels') {
             $fromSuppliersQuery->where('risk_level', $riskFilter);
         }
@@ -41,22 +57,26 @@ class SupplierController extends Controller
             'slug' => $s->slug,
             'supplier_id' => $s->supplier_id,
             'reason' => $s->blacklist_reason,
-            'since' => $s->blacklisted_since ? $s->blacklisted_since->format('M. d, Y') : null,
+            'since' => optional($s->blacklisted_since)->format('M. d, Y'),
             'risk' => $s->risk_level ?? 'High',
         ]);
+
+        $blacklistedSupplierCodes = $fromSuppliers->pluck('supplier_id')->filter()->unique()->values()->all();
 
         $standaloneQuery = BlacklistedSupplier::query();
         if ($riskFilter && $riskFilter !== 'All Risk Levels') {
             $standaloneQuery->where('risk_level', $riskFilter);
         }
-        $standalone = $standaloneQuery->get()->map(fn ($b) => [
-            'supplier' => $b->name,
-            'slug' => null,
-            'supplier_id' => $b->supplier_code,
-            'reason' => $b->reason,
-            'since' => $b->since,
-            'risk' => $b->risk_level ?? 'Critical',
-        ]);
+        $standalone = $standaloneQuery->get()
+            ->reject(fn ($b) => $b->supplier_code && in_array($b->supplier_code, $blacklistedSupplierCodes, true))
+            ->map(fn ($b) => [
+                'supplier' => $b->name,
+                'slug' => null,
+                'supplier_id' => $b->supplier_code,
+                'reason' => $b->reason,
+                'since' => $b->since,
+                'risk' => $b->risk_level ?? 'Critical',
+            ]);
 
         $combined = $fromSuppliers->concat($standalone)->values();
 
@@ -71,9 +91,11 @@ class SupplierController extends Controller
     public function dashboard()
     {
         $suppliers = Supplier::latest()->take(10)->get()->toArray();
+        $topSuppliers = Supplier::orderByDesc('total_orders')->take(10)->get()->toArray();
 
         return view('suppliers.dashboard', [
             'suppliers' => $suppliers,
+            'topSuppliers' => $topSuppliers,
             'stats' => $this->stats(),
         ]);
     }
@@ -217,7 +239,7 @@ class SupplierController extends Controller
                 'payment_terms' => $data['payment_terms'],
                 'payment_method' => $data['payment_method'],
                 'description' => $data['description'] ?? null,
-                'status' => 'Pending Verification',
+                'status' => 'Active',
                 'since' => now(),
                 'location' => 'Metro Manila',
             ]);
@@ -267,12 +289,44 @@ class SupplierController extends Controller
         $s = Supplier::with(['productsRelation', 'purchaseOrders', 'contractHistoryEntries', 'addressRelation'])
             ->where('slug', $supplier)->firstOrFail();
 
+        // Build the data array ensuring all view fields are populated
         $data = $s->toArray();
-        $data['products'] = $s->products;
-        $data['purchase_history'] = $s->purchase_history;
-        $data['status'] = $s->status;
-        $data['blacklist_reason'] = $s->blacklist_reason;
-        $data['blacklisted_since'] = $s->blacklisted_since ? $s->blacklisted_since->format('M. d, Y') : null;
+
+        // Ensure supplier_name is always present
+        $data['supplier_name'] = $s->supplier_name ?? $s->name ?? '';
+        $data['name']          = $data['supplier_name'];
+
+        // Resolve address from the eager-loaded relation (accessor uses this)
+        if ($s->addressRelation) {
+            $data['address'] = trim(
+                ($s->addressRelation->street ?? '')
+                . (($s->addressRelation->city ?? '') ? ', ' . $s->addressRelation->city : '')
+            );
+        } else {
+            $data['address'] = $data['address'] ?? '';
+        }
+
+        // Ensure contact fields use dedicated contact columns, fall back to company fields
+        $data['contact_name']  = $s->contact_name  ?? '';
+        $data['contact_role']  = $s->contact_role  ?? '';
+        $data['contact_phone'] = $s->contact_phone ?? $s->phone ?? '';
+        $data['contact_email'] = $s->contact_email ?? $s->email ?? '';
+
+        // Products, history, status
+        $data['products']          = $s->products;
+        $data['purchase_history']  = $s->purchase_history;
+        $data['status']            = $s->status;
+        $data['blacklist_reason']  = $s->blacklist_reason;
+        $data['blacklisted_since'] = optional($s->blacklisted_since)->format('M. d, Y');
+
+        // Ensure numeric stats have defaults
+        $data['total_orders']    = $data['total_orders']    ?? 0;
+        $data['total_spent']     = $data['total_spent']     ?? 0;
+        $data['avg_order_value'] = $data['avg_order_value'] ?? 0;
+        $data['on_time_rate']    = $data['on_time_rate']    ?? 0;
+        $data['last_transaction'] = $s->getRawOriginal('last_transaction')
+            ? \Illuminate\Support\Carbon::parse($s->getRawOriginal('last_transaction'))->format('M d, Y')
+            : 'N/A';
 
         return view('suppliers.show', [
             'supplier' => $data,
