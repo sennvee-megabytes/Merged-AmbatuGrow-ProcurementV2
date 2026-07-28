@@ -166,8 +166,8 @@
             approversFor(stepType) {
                 const roleMap = {
                     manager_approval: 'manager',
-                    finance_approval: 'finance_manager',
                     department_head_approval: 'department_head',
+                    finance_approval: 'finance_manager',
                 };
                 return this.users.filter(u => u.role === roleMap[stepType]);
             },
