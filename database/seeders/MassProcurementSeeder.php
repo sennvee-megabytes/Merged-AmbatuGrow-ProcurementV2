@@ -110,7 +110,7 @@ class MassProcurementSeeder extends Seeder
 
         $suppliers = [];
         foreach ($supplierNames as $index => $name) {
-            $status = $index % 4 === 0 ? 'Pending Verification' : ($index % 6 === 0 ? 'Blacklisted' : 'Active');
+            $status = $index % 4 === 0 ? 'Verified' : ($index % 6 === 0 ? 'Blacklisted' : 'Active');
             $slug = Str::slug($name);
             
             $suppliers[] = Supplier::create([

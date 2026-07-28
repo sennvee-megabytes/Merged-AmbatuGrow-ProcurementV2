@@ -16,12 +16,15 @@ class SupplierController extends Controller
 {
     protected function stats(): array
     {
+        Supplier::whereIn('status', ['Pending', 'Pending Verification', 'pending', 'pending_verification', 'Awaiting Review'])->update(['status' => 'Active']);
+
         $total = Supplier::count();
+        $active = Supplier::whereIn('status', ['Active', 'Verified', 'active', 'verified'])->count();
 
         return [
             'total' => $total,
-            'active' => Supplier::where('status', 'Active')->count(),
-            'pending' => Supplier::where('status', 'Pending Verification')->count(),
+            'active' => $active,
+            'pending' => 0,
             'blacklisted' => Supplier::where('status', 'Blacklisted')->count()
                 + BlacklistedSupplier::count(),
         ];
@@ -70,10 +73,41 @@ class SupplierController extends Controller
     // Supplier Management dashboard
     public function dashboard()
     {
+        $suppliersWithOrders = Supplier::withCount('purchaseOrders')
+            ->get()
+            ->map(function ($supplier) {
+                $poCount = (int) $supplier->purchase_orders_count;
+                if ($poCount === 0 && !empty($supplier->total_orders)) {
+                    $poCount = (int) $supplier->total_orders;
+                }
+                return [
+                    'id' => $supplier->id,
+                    'name' => $supplier->supplier_name ?: $supplier->name,
+                    'orders_count' => $poCount,
+                ];
+            })
+            ->filter(fn ($s) => $s['orders_count'] > 0)
+            ->unique('id')
+            ->sortByDesc('orders_count')
+            ->values()
+            ->take(10);
+
+        $maxOrders = $suppliersWithOrders->max('orders_count') ?? 0;
+
+        $topSuppliers = $suppliersWithOrders->map(function ($s) use ($maxOrders) {
+            $percentage = $maxOrders > 0 ? round(($s['orders_count'] / $maxOrders) * 100, 1) : 0;
+            return [
+                'name' => $s['name'],
+                'orders_count' => $s['orders_count'],
+                'progress_percentage' => $percentage,
+            ];
+        })->toArray();
+
         $suppliers = Supplier::latest()->take(10)->get()->toArray();
 
         return view('suppliers.dashboard', [
             'suppliers' => $suppliers,
+            'topSuppliers' => $topSuppliers,
             'stats' => $this->stats(),
         ]);
     }
@@ -109,10 +143,12 @@ class SupplierController extends Controller
 
     public function activeIndex(Request $request)
     {
+        Supplier::whereIn('status', ['Pending', 'Pending Verification', 'pending', 'pending_verification', 'Awaiting Review'])->update(['status' => 'Active']);
+
         $keyword = (string) $request->query('q', '');
         $keyword = trim($keyword);
 
-        $query = Supplier::where('status', 'Active');
+        $query = Supplier::whereIn('status', ['Active', 'Verified', 'active', 'verified']);
 
         if ($keyword !== '') {
             $pattern = "%{$keyword}%";
@@ -133,26 +169,7 @@ class SupplierController extends Controller
 
     public function pendingIndex(Request $request)
     {
-        $keyword = (string) $request->query('q', '');
-        $keyword = trim($keyword);
-
-        $query = Supplier::where('status', 'Pending Verification');
-
-        if ($keyword !== '') {
-            $pattern = "%{$keyword}%";
-            $query->where(function ($q) use ($pattern) {
-                $q->where('supplier_name', 'like', $pattern)
-                  ->orWhere('location', 'like', $pattern)
-                  ->orWhere('supplier_code', 'like', $pattern)
-                  ->orWhere('supplier_id', 'like', $pattern);
-            });
-        }
-
-        $suppliers = $query->latest()->paginate(15)->withQueryString();
-
-        return view('suppliers.pending', [
-            'suppliers' => $suppliers,
-        ]);
+        return redirect()->route('suppliers.index');
     }
 
     // Add new supplier form
@@ -167,6 +184,7 @@ class SupplierController extends Controller
             'company_name' => ['required', 'string', 'max:255'],
             'business_type' => ['required', 'string', 'max:255'],
             'address' => ['required', 'string'],
+            'location' => ['nullable', 'string', 'max:255'],
             'phone' => ['required', 'string', 'max:50'],
             'email' => ['required', 'email', 'max:255'],
             'contact_person' => ['required', 'string', 'max:255'],
@@ -182,6 +200,8 @@ class SupplierController extends Controller
             'description' => ['nullable', 'string', 'max:1000'],
         ]);
 
+        $locationValue = trim($data['location'] ?? $data['address']);
+
         $baseSlug = Str::slug($data['company_name']);
         $slug = $baseSlug;
         $i = 1;
@@ -192,8 +212,8 @@ class SupplierController extends Controller
         try {
             $supplierAddress = Address::create([
                 'street' => $data['address'],
-                'city' => 'Manila',
-                'province' => 'Metro Manila',
+                'city' => $locationValue,
+                'province' => $locationValue,
                 'zipcode' => '1000',
                 'country' => 'Philippines',
             ]);
@@ -217,9 +237,9 @@ class SupplierController extends Controller
                 'payment_terms' => $data['payment_terms'],
                 'payment_method' => $data['payment_method'],
                 'description' => $data['description'] ?? null,
-                'status' => 'Pending Verification',
+                'status' => 'Active',
                 'since' => now(),
-                'location' => 'Metro Manila',
+                'location' => $locationValue,
             ]);
 
             foreach ($data['products'] as $prodName) {

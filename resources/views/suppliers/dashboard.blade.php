@@ -6,7 +6,7 @@
 @section('content')
 
     {{-- KPI Cards --}}
-    <div class="grid grid-cols-4 gap-4 mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         {{-- Total Suppliers --}}
         <a href="{{ route('suppliers.index') }}" class="kpi-card hover:shadow-md transition-shadow">
             <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
@@ -35,20 +35,6 @@
                 <div class="text-xs font-medium text-gray-500 mb-0.5">Active Suppliers</div>
                 <div class="text-2xl font-bold text-gray-900">{{ $stats['active'] }}</div>
                 <div class="text-xs text-gray-500 font-medium mt-1">{{ round(($stats['active'] / max($stats['total'], 1)) * 100) }}% of total</div>
-            </div>
-        </a>
-
-        {{-- Pending --}}
-        <a href="{{ route('suppliers.pending') }}" class="kpi-card hover:shadow-md transition-shadow">
-            <div class="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center shrink-0">
-                <svg class="w-5 h-5 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-            </div>
-            <div>
-                <div class="text-xs font-medium text-gray-500 mb-0.5">Pending Verification</div>
-                <div class="text-2xl font-bold text-gray-900">{{ $stats['pending'] }}</div>
-                <div class="text-xs text-orange-500 font-medium mt-1">Requires review</div>
             </div>
         </a>
 
@@ -166,21 +152,27 @@
             {{-- Top Suppliers --}}
             <div class="card flex-1">
                 <h2 class="card-title">Top Suppliers  (by Orders)</h2>
-                <ol class="space-y-3">
-                    @foreach ($suppliers as $i => $s)
-                    <li class="flex items-center gap-3">
-                        <span class="text-[13px] font-semibold text-gray-500 w-4 shrink-0">{{ $i+1 }}</span>
-                        <div class="avatar-sm shrink-0"></div>
-                        <div class="flex-1 min-w-0">
-                            <div class="text-[13px] font-semibold text-gray-800 truncate">{{ $s['name'] }}</div>
-                            <div class="progress-bar mt-1" style="width: 100%">
-                                <div style="width: {{ max(20, 100 - ($i * 22)) }}%"></div>
+                @if (!empty($topSuppliers) && count($topSuppliers) > 0)
+                    <ol class="space-y-3">
+                        @foreach ($topSuppliers as $i => $s)
+                        <li class="flex items-center gap-3">
+                            <span class="text-[13px] font-semibold text-gray-500 w-4 shrink-0">{{ $i+1 }}</span>
+                            <div class="avatar-sm shrink-0"></div>
+                            <div class="flex-1 min-w-0">
+                                <div class="text-[13px] font-semibold text-gray-800 truncate">{{ $s['name'] }}</div>
+                                <div class="progress-bar mt-1" style="width: 100%">
+                                    <div style="width: {{ $s['progress_percentage'] }}%"></div>
+                                </div>
                             </div>
-                        </div>
-                        <span class="text-[12px] font-medium text-gray-500 shrink-0 whitespace-nowrap">{{ number_format($s['total_orders']) }} orders</span>
-                    </li>
-                    @endforeach
-                </ol>
+                            <span class="text-[12px] font-medium text-gray-500 shrink-0 whitespace-nowrap">{{ number_format($s['orders_count']) }} {{ $s['orders_count'] == 1 ? 'order' : 'orders' }}</span>
+                        </li>
+                        @endforeach
+                    </ol>
+                @else
+                    <div class="text-[13px] text-gray-500 py-6 text-center">
+                        No supplier order data available.
+                    </div>
+                @endif
             </div>
         </div>
     </div>

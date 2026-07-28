@@ -27,20 +27,35 @@
                 showRequisitionModal: false,
                 showPoModal: false,
                 catalogProducts: @json($catalogProducts ?? []),
-                reqItems: [{ sku: '', name: '', unit: 'Unit', qty: 1, cost: 0, justification: '' }],
-                poItems: [{ sku: '', name: '', unit: 'Unit', qty: 1, cost: 0 }],
+                reqItems: [{ sku: '', name: '', unit: '', qty: 1, cost: 0, justification: '' }],
+                poItems: [{ sku: '', name: '', unit: '', qty: 1, cost: 0 }],
                 selectCatalogItem(itemIndex, productId) {
-                    if (!productId) return;
+                    if (!productId) {
+                        if (this.reqItems[itemIndex]) {
+                            this.reqItems[itemIndex].unit = '';
+                        }
+                        return;
+                    }
                     const prod = this.catalogProducts.find(p => p.id == productId);
                     if (prod && this.reqItems[itemIndex]) {
                         this.reqItems[itemIndex].sku = prod.sku || '';
                         this.reqItems[itemIndex].name = prod.name || '';
-                        this.reqItems[itemIndex].unit = prod.uom ? (prod.uom.uom_code || prod.uom.uom_name) : 'Unit';
                         this.reqItems[itemIndex].cost = Number(prod.base_price || 0);
+
+                        let uomVal = '';
+                        if (prod.uom) {
+                            uomVal = prod.uom.uom_name || prod.uom.uom_code || '';
+                        }
+
+                        if (!uomVal) {
+                            this.reqItems[itemIndex].unit = 'No UOM Assigned';
+                        } else {
+                            this.reqItems[itemIndex].unit = uomVal;
+                        }
                     }
                 },
                 addReqItem() {
-                    this.reqItems.push({ sku: '', name: '', unit: 'Unit', qty: 1, cost: 0, justification: '' });
+                    this.reqItems.push({ sku: '', name: '', unit: '', qty: 1, cost: 0, justification: '' });
                 },
                 removeReqItem(i) {
                     this.reqItems.splice(i, 1);
@@ -194,7 +209,7 @@
     <div x-show="showRequisitionModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" @click="showRequisitionModal = false"></div>
         
-        <form action="{{ route('requisitions.store') }}" method="POST" class="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col z-50 animate-in fade-in zoom-in duration-200">
+        <form action="{{ route('requisitions.store') }}" method="POST" @submit="if(reqItems.some(i => !i.unit || i.unit === 'No UOM Assigned')) { $event.preventDefault(); alert('Cannot submit requisition: One or more selected items have \'No UOM Assigned\'. Please select valid items with assigned UOM.'); return false; }" class="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col z-50 animate-in fade-in zoom-in duration-200">
             @csrf
             <input type="hidden" name="action" value="continue">
             <input type="hidden" name="title" x-bind:value="'PR - ' + (reqItems[0] && reqItems[0].name ? reqItems[0].name : 'Office Supplies') + ' (' + new Date().toLocaleDateString() + ')'">
@@ -272,17 +287,17 @@
                                     <label class="block text-[10px] font-semibold text-slate-400 mb-0.5">SKU</label>
                                     <input type="text" x-model="item.sku" :name="`items[${index}][sku]`" placeholder="e.g. AGRI-SEED-042" class="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs">
                                 </div>
-                                <div class="col-span-12 md:col-span-4">
+                                <div class="col-span-12 md:col-span-3">
                                     <label class="block text-[10px] font-semibold text-slate-400 mb-0.5">Item Name</label>
                                     <input type="text" x-model="item.name" :name="`items[${index}][name]`" required placeholder="e.g. Hybrid Rice Seeds" class="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs">
                                 </div>
                                 <div class="col-span-4 md:col-span-2">
-                                    <label class="block text-[10px] font-semibold text-slate-400 mb-0.5">UOM</label>
-                                    <input type="text" x-model="item.unit" :name="`items[${index}][unit]`" required placeholder="Unit" class="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs">
+                                    <label class="block text-[10px] font-semibold text-slate-400 mb-0.5 text-center">UOM</label>
+                                    <input type="text" x-model="item.unit" :name="`items[${index}][unit]`" required readonly placeholder="UOM" class="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs bg-slate-100 cursor-not-allowed text-slate-700 font-semibold text-center whitespace-nowrap overflow-visible">
                                 </div>
                                 <div class="col-span-4 md:col-span-2">
-                                    <label class="block text-[10px] font-semibold text-slate-400 mb-0.5">Qty</label>
-                                    <input type="number" x-model.number="item.qty" :name="`items[${index}][qty]`" required min="1" class="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs">
+                                    <label class="block text-[10px] font-semibold text-slate-400 mb-0.5 text-center">Qty</label>
+                                    <input type="number" x-model.number="item.qty" :name="`items[${index}][qty]`" required min="1" step="1" class="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs font-semibold text-center whitespace-nowrap overflow-visible focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
                                 </div>
                                 <div class="col-span-4 md:col-span-2">
                                     <label class="block text-[10px] font-semibold text-slate-400 mb-0.5">Est. Unit Cost (₱)</label>

@@ -261,8 +261,13 @@
             @if ($selected)
                 @php 
                     $currentStep = $selected->currentStep();
-                    $userStep = $selected->approvalSteps->where('approver_id', auth()->id())->where('status', 'pending')->first();
-                    $canAct = $userStep && $userStep->canBeActedOnBy(auth()->user(), $selected); 
+                    $userStep = $selected->approvalSteps
+                        ->filter(fn($s) => $s->canBeActedOnBy(auth()->user(), $selected))
+                        ->first();
+                    if (!$userStep && $currentStep && $currentStep->canBeActedOnBy(auth()->user(), $selected)) {
+                        $userStep = $currentStep;
+                    }
+                    $canAct = (bool) $userStep; 
                 @endphp
 
                 <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
@@ -337,9 +342,8 @@
 
                 <div class="mt-6 border-t border-slate-100 pt-5">
                     @if ($canAct)
-                        <form method="POST" action="{{ route('approvals.act', $selected) }}" class="space-y-3.5" x-data="{ decision: '', submitted: false }" @submit="submitted = true">
+                        <form method="POST" action="{{ route('approvals.act', $selected) }}" class="space-y-3.5">
                             @csrf
-                            <input type="hidden" name="decision" x-model="decision">
                             
                             <div>
                                 <label class="block text-[10px] font-black text-slate-500 uppercase tracking-wide mb-1.5">Remarks / Comments</label>
@@ -358,9 +362,9 @@
                             </div>
 
                             <div class="flex gap-2.5 pt-1.5">
-                                <button type="submit" @click="decision = 'reject'" :disabled="submitted" class="flex-1 px-4 py-2.5 text-xs font-bold rounded-xl bg-red-50 text-red-700 border border-red-100 hover:bg-red-100 transition-colors disabled:opacity-50 uppercase tracking-wide">Reject</button>
-                                <button type="submit" @click="decision = 'delegate'" :disabled="submitted" class="flex-1 px-4 py-2.5 text-xs font-bold rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors disabled:opacity-50 uppercase tracking-wide">Delegate</button>
-                                <button type="submit" @click="decision = 'approve'" :disabled="submitted" class="flex-1 px-4 py-2.5 text-xs font-bold rounded-xl bg-green-800 text-white hover:bg-green-950 transition-colors disabled:opacity-50 uppercase tracking-wide shadow-sm">Approve</button>
+                                <button type="submit" name="decision" value="reject" class="flex-1 px-4 py-2.5 text-xs font-bold rounded-xl bg-red-50 text-red-700 border border-red-100 hover:bg-red-100 transition-colors uppercase tracking-wide">Reject</button>
+                                <button type="submit" name="decision" value="delegate" class="flex-1 px-4 py-2.5 text-xs font-bold rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors uppercase tracking-wide">Delegate</button>
+                                <button type="submit" name="decision" value="approve" class="flex-1 px-4 py-2.5 text-xs font-bold rounded-xl bg-green-800 text-white hover:bg-green-950 transition-colors uppercase tracking-wide shadow-sm">Approve</button>
                             </div>
                         </form>
                     @else

@@ -63,6 +63,7 @@ Route::prefix('order-management')->middleware(['auth'])->group(function () {
 
 Route::prefix('purchase-and-requisition')->middleware(['auth', 'approver'])->group(function () {
     Route::get('/', [ApprovalController::class, 'index'])->name('approvals.index');
+    Route::get('/pending-count', [ApprovalController::class, 'pendingCount'])->name('approvals.pending_count');
     Route::get('/approvals/{requisition}', [ApprovalController::class, 'show'])->name('approvals.show');
     Route::post('/approvals/{requisition}/act', [ApprovalController::class, 'act'])->name('approvals.act');
 

@@ -30,9 +30,15 @@
                             </select>
                         </div>
                     </div>
-                    <div>
-                        <label class="form-label">Address <span class="text-red-500">*</span></label>
-                        <input type="text" name="address" placeholder="Enter complete address" class="form-input" required>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="form-label">Location (City, Province) <span class="text-red-500">*</span></label>
+                            <input type="text" name="location" placeholder="e.g. Indang, Cavite" class="form-input" required>
+                        </div>
+                        <div>
+                            <label class="form-label">Complete Street Address <span class="text-red-500">*</span></label>
+                            <input type="text" name="address" placeholder="e.g. Barangay Kaytambog, Indang, Cavite" class="form-input" required>
+                        </div>
                     </div>
                     <div class="grid grid-cols-2 gap-3">
                         <div>

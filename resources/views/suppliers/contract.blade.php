@@ -5,6 +5,16 @@
 
 @section('content')
 
+    {{-- Top-Left Back Button --}}
+    <div class="mb-4">
+        <button type="button" 
+                onclick="if (window.history.length > 1 && document.referrer && document.referrer.indexOf('/supplier-management') !== -1) { window.history.back(); } else { window.location.href='{{ route('suppliers.index') }}'; }"
+                class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-slate-900 text-xs font-bold shadow-sm transition-all cursor-pointer">
+            <i data-lucide="arrow-left" class="w-4 h-4"></i>
+            <span>Back to Supplier List</span>
+        </button>
+    </div>
+
     {{-- Supplier Header --}}
     <div class="flex items-start gap-5 mb-7 font-sans">
         <div class="w-20 h-20 rounded-full bg-green-900 border-2 border-white flex items-center justify-center text-white text-2xl font-black shrink-0 shadow-md">

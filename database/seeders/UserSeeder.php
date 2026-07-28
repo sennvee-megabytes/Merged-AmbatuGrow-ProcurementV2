@@ -21,9 +21,9 @@ class UserSeeder extends Seeder
                 'avatar_initial' => 'JJ',
             ],
             [
-                'name' => 'Sarah Jenkins',
-                'username' => 'sarah.jenkins',
-                'email' => 'sarah.jenkins@ambatugrow.test',
+                'name' => 'Sarah Jerkins',
+                'username' => 'sarah.jerkins',
+                'email' => 'sarah.jerkins@ambatugrow.test',
                 'role' => 'manager',
                 'job_title' => 'Manager',
                 'department' => 'Marketing',
@@ -74,6 +74,6 @@ class UserSeeder extends Seeder
             );
         }
 
-        User::where('username', 'robin.lapa')->orWhere('name', 'Robin Lapa')->delete();
+        User::where('username', 'robin.lapa')->orWhere('name', 'Robin Lapa')->orWhere('username', 'sarah.jenkins')->orWhere('name', 'Sarah Jenkins')->delete();
     }
 }

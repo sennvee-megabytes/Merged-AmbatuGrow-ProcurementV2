@@ -17,7 +17,7 @@ class CreateSuppliersTable extends Migration
             $table->string('email')->nullable(); // From Doc
             $table->string('phone')->nullable(); // From Doc
             $table->foreignId('address_id')->nullable()->constrained('addresses')->nullOnDelete(); // From Doc
-            $table->string('status')->default('Pending Verification'); // Active | Inactive | Blacklisted | Pending Verification
+            $table->string('status')->default('Active'); // Active | Blacklisted
 
             // UI & Legacy columns needed by current views
             $table->string('supplier_id')->nullable(); // Generated, e.g. AGR-00125

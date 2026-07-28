@@ -95,20 +95,35 @@ Alpine.data('appLayout', (initialData = {}) => ({
     requestorName: initialData.requestorName || '',
     suppliersList: initialData.suppliersList || [],
     catalogProducts: initialData.catalogProducts || [],
-    reqItems: initialData.reqItems || [{ sku: '', name: '', unit: 'Unit', qty: 1, cost: 0, justification: '' }],
-    poItems: initialData.poItems || [{ sku: '', name: '', unit: 'Unit', qty: 1, cost: 0 }],
+    reqItems: initialData.reqItems || [{ sku: '', name: '', unit: '', qty: 1, cost: 0, justification: '' }],
+    poItems: initialData.poItems || [{ sku: '', name: '', unit: '', qty: 1, cost: 0 }],
     selectCatalogItem(itemIndex, productId) {
-        if (!productId) return;
+        if (!productId) {
+            if (this.reqItems[itemIndex]) {
+                this.reqItems[itemIndex].unit = '';
+            }
+            return;
+        }
         const prod = this.catalogProducts.find(p => p.id == productId);
         if (prod && this.reqItems[itemIndex]) {
             this.reqItems[itemIndex].sku = prod.sku || '';
             this.reqItems[itemIndex].name = prod.name || '';
-            this.reqItems[itemIndex].unit = prod.uom ? (prod.uom.uom_code || prod.uom.uom_name) : 'Unit';
             this.reqItems[itemIndex].cost = Number(prod.base_price || 0);
+
+            let uomVal = '';
+            if (prod.uom) {
+                uomVal = prod.uom.uom_name || prod.uom.uom_code || '';
+            }
+
+            if (!uomVal) {
+                this.reqItems[itemIndex].unit = 'No UOM Assigned';
+            } else {
+                this.reqItems[itemIndex].unit = uomVal;
+            }
         }
     },
     addReqItem() {
-        this.reqItems.push({ sku: '', name: '', unit: 'Unit', qty: 1, cost: 0, justification: '' });
+        this.reqItems.push({ sku: '', name: '', unit: '', qty: 1, cost: 0, justification: '' });
     },
     removeReqItem(i) {
         this.reqItems.splice(i, 1);
