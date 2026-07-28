@@ -1025,7 +1025,7 @@
                 <div>
                     <div class="section-label">Workflow</div>
                     <h2>Review &amp; Logs</h2>
-                    <p>Access approvals, matched invoices, and activity logs.</p>
+                    <p>Access approvals and activity logs.</p>
                 </div>
             </div>
 
@@ -1033,7 +1033,6 @@
                 <div class="sidebar-nav" style="display:grid; gap:16px;">
                     <div class="tier-primary" style="display:flex; gap:6px; flex-wrap:wrap;">
                         <button type="button" class="tab side-tab active" data-section="notifications" style="padding: 8px 12px; font-size:12px;">Alerts</button>
-                        <button type="button" class="tab side-tab" data-section="match-invoice" style="padding: 8px 12px; font-size:12px;">Match Invoice</button>
                         <button type="button" class="tab side-tab" data-section="logs" style="padding: 8px 12px; font-size:12px;">Activity</button>
                     </div>
 
@@ -1059,36 +1058,6 @@
                             </div>
                         </div>
 
-                        <!-- Match Invoice Form Section -->
-                        <div class="mini-card side-section" data-section="match-invoice" style="display:none">
-                            <div class="mini-title">Match Invoice to PO</div>
-                            <form method="POST" action="{{ route('purchase_orders.match_invoice') }}">
-                                @csrf
-                                <div class="form-group">
-                                    <label style="font-size:12px; font-weight:700;">Select Purchase Order *</label>
-                                    <select name="po_number" required style="width:100%; border:1px solid #d6ddd3; border-radius:10px; padding:8px 10px; font-size:13px;">
-                                        <option value="">Choose Active PO...</option>
-                                        @foreach($purchaseOrders as $po)
-                                            @if($po->status === 'sent')
-                                                <option value="{{ $po->po_number }}">{{ $po->po_number }} — {{ $po->supplier->name }} (₱{{ number_format($po->total, 2) }})</option>
-                                            @endif
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label style="font-size:12px; font-weight:700;">Invoice Reference *</label>
-                                    <input type="text" name="invoice_number" required placeholder="e.g. INV-SUP-001" style="width:100%; border:1px solid #d6ddd3; border-radius:10px; padding:8px 10px; font-size:13px;" />
-                                </div>
-                                <div class="form-group">
-                                    <label style="font-size:12px; font-weight:700;">Invoice Amount (₱) *</label>
-                                    <input type="number" step="0.01" name="amount" required placeholder="0.00" style="width:100%; border:1px solid #d6ddd3; border-radius:10px; padding:8px 10px; font-size:13px;" />
-                                </div>
-                                <button type="submit" class="btn btn-primary" style="width:100%; padding:10px; font-size:13px; font-weight:700;">
-                                    Match Invoice
-                                </button>
-                            </form>
-                        </div>
-
                         <!-- Logs Section -->
                         <div class="mini-card side-section" data-section="logs" style="display:none">
                             <div class="mini-title">Recent Activities</div>
@@ -1098,13 +1067,6 @@
                                         <strong>PO Transmitted</strong>
                                         <div class="muted" style="font-size:12px;">{{ $po->po_number }} issued to {{ $po->supplier->name }}</div>
                                         <div style="font-size:10px; margin-top:4px; color:var(--muted);">{{ $po->updated_at->diffForHumans() }}</div>
-                                    </div>
-                                @endforeach
-                                @foreach($invoices->take(2) as $inv)
-                                    <div class="log-item" style="border-left: 3px solid #2354c9;">
-                                        <strong>Invoice Matched</strong>
-                                        <div class="muted" style="font-size:12px;">{{ $inv->invoice_number }} to {{ $inv->purchaseOrder->po_number ?? '—' }}</div>
-                                        <div style="font-size:10px; margin-top:4px; color:var(--muted);">{{ $inv->received_at->diffForHumans() }}</div>
                                     </div>
                                 @endforeach
                             </div>

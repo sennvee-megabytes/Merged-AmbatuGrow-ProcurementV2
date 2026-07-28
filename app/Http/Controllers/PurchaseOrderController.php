@@ -75,11 +75,6 @@ class PurchaseOrderController extends Controller
             'rejected' => $purchaseOrders->whereIn('status', ['rejected', 'cancelled'])->count(),
         ];
 
-        // Fetch matched invoices
-        $invoices = \App\Models\Invoice::with('supplier', 'purchaseOrder')
-            ->orderBy('received_at', 'desc')
-            ->get();
-
         // Calculate spend data per supplier
         $spendData = $purchaseOrders->groupBy('supplier_id')->map(function ($pos) {
             return [
@@ -88,7 +83,7 @@ class PurchaseOrderController extends Controller
             ];
         })->values();
 
-        return view('purchase_orders.procurement', compact('purchaseOrders', 'suppliers', 'stats', 'invoices', 'spendData'));
+        return view('purchase_orders.procurement', compact('purchaseOrders', 'suppliers', 'stats', 'spendData'));
     }
 
     public function create()
@@ -231,25 +226,6 @@ class PurchaseOrderController extends Controller
         $purchaseOrder->status = $request->input('status');
         $purchaseOrder->save();
         return back()->with('status','Status updated');
-    }
-
-    public function matchInvoice(Request $request)
-    {
-        // naive match: find PO by po_number and associate invoice
-        $request->validate(['po_number'=>'required','invoice_number'=>'required','amount'=>'required|numeric']);
-        $po = PurchaseOrder::where('po_number',$request->po_number)->first();
-        if(!$po) return back()->with('error','PO not found');
-
-        // create invoice
-        $inv = \App\Models\Invoice::create([
-            'invoice_number' => $request->invoice_number,
-            'supplier_id' => $po->supplier_id,
-            'purchase_order_id' => $po->id,
-            'amount' => $request->amount,
-            'received_at' => now(),
-        ]);
-
-        return back()->with('status','Invoice matched to PO');
     }
 
     public function downloadPdf(PurchaseOrder $purchaseOrder)

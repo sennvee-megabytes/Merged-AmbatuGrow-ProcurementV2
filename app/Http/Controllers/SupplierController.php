@@ -73,32 +73,22 @@ class SupplierController extends Controller
     // Supplier Management dashboard
     public function dashboard()
     {
-        $suppliersWithOrders = Supplier::withCount('purchaseOrders')
-            ->get()
-            ->map(function ($supplier) {
-                $poCount = (int) $supplier->purchase_orders_count;
-                if ($poCount === 0 && !empty($supplier->total_orders)) {
-                    $poCount = (int) $supplier->total_orders;
-                }
-                return [
-                    'id' => $supplier->id,
-                    'name' => $supplier->supplier_name ?: $supplier->name,
-                    'orders_count' => $poCount,
-                ];
-            })
-            ->filter(fn ($s) => $s['orders_count'] > 0)
-            ->unique('id')
-            ->sortByDesc('orders_count')
-            ->values()
-            ->take(10);
+        $topSuppliersData = Supplier::whereIn('status', ['Active', 'Verified', 'active', 'verified'])
+            ->withCount('purchaseOrders')
+            ->having('purchase_orders_count', '>', 0)
+            ->orderByDesc('purchase_orders_count')
+            ->take(10)
+            ->get();
 
-        $maxOrders = $suppliersWithOrders->max('orders_count') ?? 0;
+        $maxOrders = $topSuppliersData->max('purchase_orders_count') ?? 0;
 
-        $topSuppliers = $suppliersWithOrders->map(function ($s) use ($maxOrders) {
-            $percentage = $maxOrders > 0 ? round(($s['orders_count'] / $maxOrders) * 100, 1) : 0;
+        $topSuppliers = $topSuppliersData->map(function ($supplier) use ($maxOrders) {
+            $poCount = (int) $supplier->purchase_orders_count;
+            $percentage = $maxOrders > 0 ? round(($poCount / $maxOrders) * 100, 1) : 0;
             return [
-                'name' => $s['name'],
-                'orders_count' => $s['orders_count'],
+                'id' => $supplier->id,
+                'name' => $supplier->supplier_name ?: $supplier->name,
+                'orders_count' => $poCount,
                 'progress_percentage' => $percentage,
             ];
         })->toArray();

@@ -824,6 +824,10 @@
                             <i class="fa-solid fa-circle-check w-5 text-center text-base shrink-0"></i>
                             <span>Active Suppliers</span>
                         </a>
+                        <a href="{{ route('suppliers.blacklisted') }}" class="flex items-center justify-start gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all w-full text-left {{ request()->routeIs('suppliers.blacklisted') ? 'bg-[#235c2b] text-white shadow-sm' : 'text-slate-800 hover:bg-[#e8ece6] hover:text-slate-900' }}">
+                            <i class="fa-solid fa-ban w-5 text-center text-base shrink-0"></i>
+                            <span>Blocked Suppliers</span>
+                        </a>
                     </nav>
                 </div>
 

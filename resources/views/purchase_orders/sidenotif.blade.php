@@ -42,16 +42,6 @@
             </div>
 
             <div class="drawer-card" style="background: transparent; border: none; box-shadow: none; margin-bottom: 24px; padding: 0;">
-                <div class="drawer-title" style="font-size: 13px; font-weight: 700; text-transform: uppercase; color: #4a5568; letter-spacing: 0.05em; margin-bottom: 8px;">Invoice Matching</div>
-                <div style="background: #fff; border: 1px solid #feebc8; border-left: 4px solid #dd6b20; padding: 12px; border-radius: 6px;">
-                    <div class="badge badge-partial" style="display:inline-flex; font-size: 12px; font-weight: 700; color: #dd6b20; margin-bottom: 4px;">INV-SUP-2026-003</div>
-                    <div style="font-size: 11px; color: #dd6b20; font-weight: 600; text-transform: uppercase; margin-bottom: 4px;">Overdue Delivery / Discrepancy</div>
-                    <p style="margin:0; font-weight:700; font-size: 14px; color: #2d3748;">TechVend Solutions</p>
-                    <p class="muted" style="margin:2px 0 0; font-size: 13px; color: #718096;">₱67,200</p>
-                </div>
-            </div>
-
-            <div class="drawer-card" style="background: transparent; border: none; box-shadow: none; margin-bottom: 24px; padding: 0;">
                 <div class="drawer-title" style="font-size: 13px; font-weight: 700; text-transform: uppercase; color: #4a5568; letter-spacing: 0.05em; margin-bottom: 8px;">Procurement Logs</div>
                 <div style="font-size: 13px; color: #4a5568;">
                     <span style="font-weight: 600;">• PR PE-2026-003</span> approved by Agent

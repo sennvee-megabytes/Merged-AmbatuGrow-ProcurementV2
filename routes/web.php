@@ -58,7 +58,6 @@ Route::prefix('order-management')->middleware(['auth'])->group(function () {
     Route::get('/purchase-orders/{purchaseOrder}/view-pdf', [PurchaseOrderController::class, 'streamPdf'])->name('purchase_orders.view_pdf');
     Route::post('/purchase-orders/{purchaseOrder}/send', [PurchaseOrderController::class, 'send'])->name('purchase_orders.send');
     Route::post('/purchase-orders/{purchaseOrder}/status', [PurchaseOrderController::class, 'updateStatus'])->name('purchase_orders.status');
-    Route::post('/match-invoice', [PurchaseOrderController::class, 'matchInvoice'])->name('purchase_orders.match_invoice');
 });
 
 Route::prefix('purchase-and-requisition')->middleware(['auth', 'approver'])->group(function () {
