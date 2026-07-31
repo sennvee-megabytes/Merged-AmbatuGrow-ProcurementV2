@@ -6,6 +6,16 @@
 @section('content')
 
 <div x-data="{ blockModalOpen: false }">
+    {{-- Top-Left Back Button --}}
+    <div class="mb-4">
+        <button type="button" 
+                onclick="if (window.history.length > 1 && document.referrer && document.referrer.indexOf('/supplier-management') !== -1) { window.history.back(); } else { window.location.href='{{ route('suppliers.index') }}'; }"
+                class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-slate-900 text-xs font-bold shadow-sm transition-all cursor-pointer">
+            <i data-lucide="arrow-left" class="w-4 h-4"></i>
+            <span>Back to Supplier List</span>
+        </button>
+    </div>
+
     {{-- Supplier Header Bar --}}
     <div class="bg-white border border-slate-200 rounded-2xl p-6 mb-6 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-5 font-sans">
         <div class="flex items-center gap-5">

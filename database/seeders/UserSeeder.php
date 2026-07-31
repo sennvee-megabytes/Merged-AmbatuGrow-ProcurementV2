@@ -21,9 +21,9 @@ class UserSeeder extends Seeder
                 'avatar_initial' => 'JJ',
             ],
             [
-                'name' => 'Sarah Jenkins',
-                'username' => 'sarah.jenkins',
-                'email' => 'sarah.jenkins@ambatugrow.test',
+                'name' => 'Sarah Jerkins',
+                'username' => 'sarah.jerkins',
+                'email' => 'sarah.jerkins@ambatugrow.test',
                 'role' => 'manager',
                 'job_title' => 'Manager',
                 'department' => 'Marketing',
@@ -46,15 +46,6 @@ class UserSeeder extends Seeder
                 'job_title' => 'Marketing Specialist',
                 'department' => 'Marketing',
                 'avatar_initial' => 'EJ',
-            ],
-            [
-                'name' => 'Robin Lapa',
-                'username' => 'robin.lapa',
-                'email' => 'robin.lapa@ambatugrow.test',
-                'role' => 'department_head',
-                'job_title' => 'Operations Head',
-                'department' => 'Ops',
-                'avatar_initial' => 'RL',
             ],
             [
                 'name' => 'Michael Finn',
@@ -82,5 +73,7 @@ class UserSeeder extends Seeder
                 array_merge($user, ['password' => Hash::make('password')])
             );
         }
+
+        User::where('username', 'robin.lapa')->orWhere('name', 'Robin Lapa')->orWhere('username', 'sarah.jenkins')->orWhere('name', 'Sarah Jenkins')->delete();
     }
 }

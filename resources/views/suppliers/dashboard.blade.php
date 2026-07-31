@@ -6,7 +6,7 @@
 @section('content')
 
     {{-- KPI Cards --}}
-    <div class="grid grid-cols-4 gap-4 mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         {{-- Total Suppliers --}}
         <a href="{{ route('suppliers.index') }}" class="kpi-card hover:shadow-md transition-shadow">
             <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
@@ -35,20 +35,6 @@
                 <div class="text-xs font-medium text-gray-500 mb-0.5">Active Suppliers</div>
                 <div class="text-2xl font-bold text-gray-900">{{ $stats['active'] }}</div>
                 <div class="text-xs text-gray-500 font-medium mt-1">{{ round(($stats['active'] / max($stats['total'], 1)) * 100) }}% of total</div>
-            </div>
-        </a>
-
-        {{-- Pending --}}
-        <a href="{{ route('suppliers.pending') }}" class="kpi-card hover:shadow-md transition-shadow">
-            <div class="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center shrink-0">
-                <svg class="w-5 h-5 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-            </div>
-            <div>
-                <div class="text-xs font-medium text-gray-500 mb-0.5">Pending Verification</div>
-                <div class="text-2xl font-bold text-gray-900">{{ $stats['pending'] }}</div>
-                <div class="text-xs text-orange-500 font-medium mt-1">Requires review</div>
             </div>
         </a>
 
@@ -127,36 +113,35 @@
                     {{-- SVG Donut --}}
                     <svg width="90" height="90" viewBox="0 0 90 90" class="shrink-0">
                         <circle cx="45" cy="45" r="34" fill="none" stroke="#E5E7EB" stroke-width="18"/>
-                        {{-- Others 10% --}}
-                        <circle cx="45" cy="45" r="34" fill="none" stroke="#D1D5DB" stroke-width="18"
-                            stroke-dasharray="{{ 2 * 3.14159 * 34 * 0.10 }} {{ 2 * 3.14159 * 34 }}"
-                            stroke-dashoffset="{{ 2 * 3.14159 * 34 * 0.0 }}"
-                            transform="rotate(-90 45 45)"/>
-                        {{-- Vegetables 20% --}}
-                        <circle cx="45" cy="45" r="34" fill="none" stroke="#6EE7B7" stroke-width="18"
-                            stroke-dasharray="{{ 2 * 3.14159 * 34 * 0.20 }} {{ 2 * 3.14159 * 34 }}"
-                            stroke-dashoffset="{{ 2 * 3.14159 * 34 * -0.10 }}"
-                            transform="rotate(-90 45 45)"/>
-                        {{-- Fruits 30% --}}
-                        <circle cx="45" cy="45" r="34" fill="none" stroke="#FCD34D" stroke-width="18"
-                            stroke-dasharray="{{ 2 * 3.14159 * 34 * 0.30 }} {{ 2 * 3.14159 * 34 }}"
-                            stroke-dashoffset="{{ 2 * 3.14159 * 34 * -0.30 }}"
-                            transform="rotate(-90 45 45)"/>
-                        {{-- Rice 40% --}}
-                        <circle cx="45" cy="45" r="34" fill="none" stroke="#059669" stroke-width="18"
-                            stroke-dasharray="{{ 2 * 3.14159 * 34 * 0.40 }} {{ 2 * 3.14159 * 34 }}"
-                            stroke-dashoffset="{{ 2 * 3.14159 * 34 * -0.60 }}"
-                            transform="rotate(-90 45 45)"/>
+                        @php
+                            $circumference = 2 * 3.14159265 * 34;
+                            $cumulativeOffset = 0;
+                            $donutSegments = array_reverse($productSuppliedData ?? []);
+                        @endphp
+                        @foreach ($donutSegments as $item)
+                            @php
+                                $segmentFraction = ($item['percentage'] ?? 0) / 100;
+                                $dashArray = ($segmentFraction * $circumference) . ' ' . $circumference;
+                                $dashOffset = -$cumulativeOffset * $circumference;
+                                $cumulativeOffset += $segmentFraction;
+                            @endphp
+                            @if (($item['percentage'] ?? 0) > 0)
+                                <circle cx="45" cy="45" r="34" fill="none" stroke="{{ $item['color'] }}" stroke-width="18"
+                                    stroke-dasharray="{{ $dashArray }}"
+                                    stroke-dashoffset="{{ $dashOffset }}"
+                                    transform="rotate(-90 45 45)"/>
+                            @endif
+                        @endforeach
                         <circle cx="45" cy="45" r="25" fill="white"/>
                     </svg>
                     <ul class="space-y-1.5 flex-1">
-                        @foreach([['Rice','#059669',40],['Fruits','#FCD34D',30],['Vegetables','#6EE7B7',20],['Others','#D1D5DB',10]] as [$label,$color,$pct])
+                        @foreach ($productSuppliedData ?? [] as $item)
                         <li class="flex items-center justify-between">
                             <span class="flex items-center gap-2 text-[13px] text-gray-600">
-                                <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background:{{ $color }}"></span>
-                                {{ $label }}
+                                <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background:{{ $item['color'] }}"></span>
+                                {{ $item['label'] }}
                             </span>
-                            <span class="text-[13px] font-semibold text-gray-900">{{ $pct }}%</span>
+                            <span class="text-[13px] font-semibold text-gray-900">{{ $item['percentage'] }}%</span>
                         </li>
                         @endforeach
                     </ul>
@@ -166,21 +151,27 @@
             {{-- Top Suppliers --}}
             <div class="card flex-1">
                 <h2 class="card-title">Top Suppliers  (by Orders)</h2>
-                <ol class="space-y-3">
-                    @foreach ($suppliers as $i => $s)
-                    <li class="flex items-center gap-3">
-                        <span class="text-[13px] font-semibold text-gray-500 w-4 shrink-0">{{ $i+1 }}</span>
-                        <div class="avatar-sm shrink-0"></div>
-                        <div class="flex-1 min-w-0">
-                            <div class="text-[13px] font-semibold text-gray-800 truncate">{{ $s['name'] }}</div>
-                            <div class="progress-bar mt-1" style="width: 100%">
-                                <div style="width: {{ max(20, 100 - ($i * 22)) }}%"></div>
+                @if (!empty($topSuppliers) && count($topSuppliers) > 0)
+                    <ol class="space-y-3">
+                        @foreach ($topSuppliers as $i => $s)
+                        <li class="flex items-center gap-3">
+                            <span class="text-[13px] font-semibold text-gray-500 w-4 shrink-0">{{ $i+1 }}</span>
+                            <div class="avatar-sm shrink-0"></div>
+                            <div class="flex-1 min-w-0">
+                                <div class="text-[13px] font-semibold text-gray-800 truncate">{{ $s['name'] }}</div>
+                                <div class="progress-bar mt-1" style="width: 100%">
+                                    <div style="width: {{ $s['progress_percentage'] }}%"></div>
+                                </div>
                             </div>
-                        </div>
-                        <span class="text-[12px] font-medium text-gray-500 shrink-0 whitespace-nowrap">{{ number_format($s['total_orders']) }} orders</span>
-                    </li>
-                    @endforeach
-                </ol>
+                            <span class="text-[12px] font-medium text-gray-500 shrink-0 whitespace-nowrap">{{ number_format($s['orders_count']) }} {{ $s['orders_count'] == 1 ? 'order' : 'orders' }}</span>
+                        </li>
+                        @endforeach
+                    </ol>
+                @else
+                    <div class="text-[13px] text-gray-500 py-6 text-center">
+                        No supplier order data available.
+                    </div>
+                @endif
             </div>
         </div>
     </div>

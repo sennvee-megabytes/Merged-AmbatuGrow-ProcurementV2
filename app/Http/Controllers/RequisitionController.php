@@ -32,7 +32,7 @@ class RequisitionController extends Controller
             'items' => ['required', 'array', 'min:1'],
             'items.*.name' => ['required', 'string', 'max:255'],
             'items.*.qty' => ['required', 'numeric', 'min:0.01'],
-            'items.*.unit' => ['nullable', 'string', 'max:50'],
+            'items.*.unit' => ['required', 'string', 'max:50', 'not_in:No UOM Assigned'],
             'items.*.unit_price' => ['required', 'numeric', 'min:0'],
             'items.*.service_id' => ['nullable', 'exists:services,id'],
             'items.*.justification' => ['nullable', 'string'],
@@ -61,12 +61,23 @@ class RequisitionController extends Controller
             ]);
 
             foreach ($data['items'] as $item) {
+                $unit = $item['unit'] ?? null;
+                if (!$unit || $unit === 'No UOM Assigned') {
+                    $prod = \App\Models\Product::with('uom')
+                        ->where('name', $item['name'])
+                        ->orWhere('sku', $item['sku'] ?? '')
+                        ->first();
+                    if ($prod && $prod->uom) {
+                        $unit = $prod->uom->uom_name ?: $prod->uom->uom_code;
+                    }
+                }
+
                 RequisitionItem::create([
                     'requisition_id' => $requisition->id,
                     'service_id' => $item['service_id'] ?? null,
                     'name' => $item['name'],
                     'qty' => $item['qty'],
-                    'unit' => $item['unit'] ?? 'service',
+                    'unit' => $unit ?: 'Unit',
                     'unit_price' => $item['unit_price'],
                     'total' => $item['qty'] * $item['unit_price'],
                     'justification' => $item['justification'] ?? null,
@@ -120,18 +131,16 @@ class RequisitionController extends Controller
 
     public static function createDefaultApprovalSteps(Requisition $requisition): void
     {
-        $sarah = User::where('username', 'sarah.jenkins')->first() ?? User::where('role', 'manager')->first() ?? Auth::user();
-        $michael = User::where('username', 'finance.manager')->first() ?? User::where('role', 'finance_manager')->first() ?? $sarah;
-        $johny = User::where('username', 'johny.papa')->first() ?? User::where('role', 'department_head')->first() ?? $sarah;
+        [$sarah, $michael, $johny] = ApprovalController::resolveWorkflowUsers();
 
         $steps = [
             [
                 'step_order' => 1,
                 'step_type' => 'manager_approval',
-                'label' => 'Project Manager Approval',
-                'description' => 'Level 1: Sarah Jenkins (Project Manager)',
+                'label' => 'Manager Approval',
+                'description' => 'Level 1: Sarah Jerkins (Manager)',
                 'required' => true,
-                'approver_id' => $sarah->id,
+                'approver_id' => $sarah?->id,
                 'status' => 'pending',
             ],
             [
@@ -140,7 +149,7 @@ class RequisitionController extends Controller
                 'label' => 'Finance Manager Approval',
                 'description' => 'Level 2: Michael Finn (Finance Manager)',
                 'required' => true,
-                'approver_id' => $michael->id,
+                'approver_id' => $michael?->id,
                 'status' => 'pending',
             ],
             [
@@ -149,22 +158,45 @@ class RequisitionController extends Controller
                 'label' => 'Head Approval',
                 'description' => 'Level 3: Johny Papa (Head)',
                 'required' => true,
-                'approver_id' => $johny->id,
+                'approver_id' => $johny?->id,
                 'status' => 'pending',
             ],
         ];
 
         DB::transaction(function () use ($requisition, $steps) {
-            $requisition->approvalSteps()->delete();
             foreach ($steps as $s) {
-                ApprovalStep::create(array_merge($s, ['requisition_id' => $requisition->id]));
+                $stepGroup = $requisition->approvalSteps()->where('step_order', $s['step_order'])->get();
+                if ($stepGroup->count() > 1) {
+                    foreach ($stepGroup->slice(1) as $dup) {
+                        $dup->delete();
+                    }
+                }
+                $existing = $stepGroup->first();
+                if (!$existing) {
+                    $duplicate = ApprovalStep::where('requisition_id', $requisition->id)
+                        ->where('step_order', $s['step_order'])
+                        ->where('approver_id', $s['approver_id'])
+                        ->first();
+                    if (!$duplicate) {
+                        ApprovalStep::create(array_merge($s, ['requisition_id' => $requisition->id]));
+                    }
+                } else {
+                    $existing->update([
+                        'approver_id' => $existing->approver_id ?: $s['approver_id'],
+                        'step_type' => $s['step_type'],
+                        'label' => $s['label'],
+                        'description' => $s['description'],
+                    ]);
+                }
             }
 
-            $requisition->update([
-                'approval_type' => 'sequential',
-                'status' => 'pending_approval',
-                'submitted_at' => now(),
-            ]);
+            if ($requisition->status === 'draft' || empty($requisition->status)) {
+                $requisition->update([
+                    'approval_type' => 'sequential',
+                    'status' => 'pending_approval',
+                    'submitted_at' => $requisition->submitted_at ?? now(),
+                ]);
+            }
         });
     }
 

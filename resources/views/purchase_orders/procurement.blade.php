@@ -676,15 +676,19 @@
                             Approved <span class="ml-1 opacity-80">({{ $purchaseOrders->where('status', 'approved')->count() }})</span>
                         </button>
                         <button type="button" class="po-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold transition text-slate-600 hover:bg-slate-100" data-filter="rejected">
-                            Rejected <span class="ml-1 opacity-80">({{ $purchaseOrders->whereIn('status', ['rejected', 'cancelled'])->count() }})</span>
+                            Rejected <span class="ml-1 opacity-80">({{ $stats['rejected'] }})</span>
                         </button>
                         <button type="button" class="po-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold transition text-slate-600 hover:bg-slate-100" data-filter="completed">
                             Completed <span class="ml-1 opacity-80">({{ $purchaseOrders->whereIn('status', ['received', 'completed'])->count() }})</span>
                         </button>
                     </div>
 
-                    <!-- Sorting Options -->
-                    <div class="flex items-center gap-2 shrink-0 w-full md:w-auto justify-end">
+                    <!-- Search Input & Sorting Options -->
+                    <div class="flex items-center gap-3 shrink-0 w-full md:w-auto justify-end">
+                        <div class="relative">
+                            <input type="text" id="po-search-input" placeholder="Search PO, PR, Vendor, Approver..." class="px-3 py-1.5 pl-8 border border-slate-300 rounded-xl text-xs font-semibold bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 w-48 md:w-56" />
+                            <i data-lucide="search" class="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        </div>
                         <label for="po-sort-select" class="text-xs font-bold text-slate-400 uppercase tracking-wider shrink-0">Sort By:</label>
                         <select id="po-sort-select" class="px-3 py-1.5 border border-slate-300 rounded-xl text-xs font-semibold bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
                             <option value="latest">Latest First</option>
@@ -704,17 +708,20 @@
                     <div class="table-wrap">
                         <table class="unified-table" id="table-data-all">
                             <thead>
-                                <tr>
+                                <tr id="po-table-header-row">
                                     <th>PO ID</th>
                                     <th>Linked PR</th>
                                     <th>Supplier</th>
                                     <th>Date Issued</th>
-                                    <th>Expected Delivery</th>
-                                    <th>Subtotal (₱)</th>
-                                    <th>VAT (₱)</th>
-                                    <th>Total (₱)</th>
+                                    <th class="col-default">Expected Delivery</th>
+                                    <th class="col-default">Subtotal (₱)</th>
+                                    <th class="col-default">VAT (₱)</th>
+                                    <th class="col-default">Total (₱)</th>
+                                    <th class="col-rejected" style="display:none;">Rejected By</th>
+                                    <th class="col-rejected" style="display:none;">Rejected Date</th>
+                                    <th class="col-rejected" style="display:none;">Rejection Reason</th>
                                     <th>Status</th>
-                                    <th>Actions</th>
+                                    <th class="col-default">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -722,7 +729,11 @@
                                     @php
                                         $subtotal = $po->total / 1.12;
                                         $vat = $subtotal * 0.12;
-                                        $isOverdue = $po->status !== 'received' && $po->expected_delivery && $po->expected_delivery->isPast();
+                                        $isOverdue = !in_array($po->status, ['received', 'rejected', 'cancelled']) && $po->expected_delivery && $po->expected_delivery->isPast();
+                                        $isRejected = in_array($po->status, ['rejected', 'cancelled']);
+                                        $rejectedBy = $po->rejected_by_name;
+                                        $rejectedDate = $po->rejected_date_formatted;
+                                        $rejectionReason = $po->rejection_reason_text;
                                     @endphp
                                     <tr class="po-row {{ $isOverdue ? 'po-row-overdue' : '' }}"
                                         data-po-id="{{ $po->id }}"
@@ -732,17 +743,23 @@
                                         data-priority="{{ strtolower($po->requisition->urgency ?? 'medium') }}"
                                         data-date="{{ $po->created_at ? $po->created_at->timestamp : 0 }}"
                                         data-amount="{{ (float) $po->total }}"
+                                        data-search="{{ strtolower($po->po_number . ' ' . ($po->requisition->code ?? '') . ' ' . ($po->supplier->name ?? '') . ' ' . $rejectedBy . ' ' . $rejectionReason) }}"
                                         style="transition: all 0.2s ease;">
                                         <td style="font-weight: 700; color: #165c32;">{{ $po->po_number }}</td>
                                         <td>{{ $po->requisition->code ?? '—' }}</td>
                                         <td>{{ $po->supplier->name ?? '—' }}</td>
                                         <td>{{ optional($po->issued_at)->format('M d, Y') ?? optional($po->created_at)->format('M d, Y') }}</td>
-                                        <td style="{{ $isOverdue ? 'color: #dc2626; font-weight: 700;' : '' }}">
+                                        <td class="col-default" style="{{ $isOverdue ? 'color: #dc2626; font-weight: 700;' : '' }}">
                                             {{ optional($po->expected_delivery)->format('M d, Y') ?? '—' }}
                                         </td>
-                                        <td>{{ number_format($subtotal, 2) }}</td>
-                                        <td>{{ number_format($vat, 2) }}</td>
-                                        <td style="font-weight: 700;">{{ number_format($po->total, 2) }}</td>
+                                        <td class="col-default">{{ number_format($subtotal, 2) }}</td>
+                                        <td class="col-default">{{ number_format($vat, 2) }}</td>
+                                        <td class="col-default" style="font-weight: 700;">{{ number_format($po->total, 2) }}</td>
+                                        
+                                        <td class="col-rejected" style="display:none;">{{ $rejectedBy }}</td>
+                                        <td class="col-rejected" style="display:none;">{{ $rejectedDate }}</td>
+                                        <td class="col-rejected" style="display:none; max-width:240px; white-space:normal;">{{ $rejectionReason }}</td>
+
                                         <td>
                                             <div style="display: flex; flex-direction: column; gap: 4px; align-items: flex-start;">
                                                 @if($po->status === 'sent')
@@ -755,8 +772,8 @@
                                                     <span class="badge badge-approved"><i data-lucide="thumbs-up" class="w-3.5 h-3.5"></i> Approved</span>
                                                 @elseif($po->status === 'partial')
                                                     <span class="badge badge-partial"><i data-lucide="package" class="w-3.5 h-3.5"></i> Partially Received</span>
-                                                @elseif($po->status === 'cancelled')
-                                                    <span class="badge badge-cancelled"><i data-lucide="x-circle" class="w-3.5 h-3.5"></i> Cancelled</span>
+                                                @elseif($isRejected)
+                                                    <span class="badge badge-cancelled"><i data-lucide="x-circle" class="w-3.5 h-3.5"></i> Rejected</span>
                                                 @else
                                                     <span class="badge badge-draft">{{ ucfirst($po->status) }}</span>
                                                 @endif
@@ -766,7 +783,7 @@
                                                 @endif
                                             </div>
                                         </td>
-                                        <td>
+                                        <td class="col-default">
                                             <div class="action-row">
                                                 <a class="btn-xs btn-outline-green" href="{{ route('purchase_orders.pdf', $po) }}" target="_blank"><i data-lucide="file-text" class="w-3.5 h-3.5"></i> PDF</a>
                                                 <button type="button" class="btn-xs btn-soft" onclick="exportTableToCSV('table-data-all', '{{ $po->po_number }}.csv')"><i data-lucide="download" class="w-3.5 h-3.5"></i> CSV</button>
@@ -1008,7 +1025,7 @@
                 <div>
                     <div class="section-label">Workflow</div>
                     <h2>Review &amp; Logs</h2>
-                    <p>Access approvals, matched invoices, and activity logs.</p>
+                    <p>Access approvals and activity logs.</p>
                 </div>
             </div>
 
@@ -1016,7 +1033,6 @@
                 <div class="sidebar-nav" style="display:grid; gap:16px;">
                     <div class="tier-primary" style="display:flex; gap:6px; flex-wrap:wrap;">
                         <button type="button" class="tab side-tab active" data-section="notifications" style="padding: 8px 12px; font-size:12px;">Alerts</button>
-                        <button type="button" class="tab side-tab" data-section="match-invoice" style="padding: 8px 12px; font-size:12px;">Match Invoice</button>
                         <button type="button" class="tab side-tab" data-section="logs" style="padding: 8px 12px; font-size:12px;">Activity</button>
                     </div>
 
@@ -1042,36 +1058,6 @@
                             </div>
                         </div>
 
-                        <!-- Match Invoice Form Section -->
-                        <div class="mini-card side-section" data-section="match-invoice" style="display:none">
-                            <div class="mini-title">Match Invoice to PO</div>
-                            <form method="POST" action="{{ route('purchase_orders.match_invoice') }}">
-                                @csrf
-                                <div class="form-group">
-                                    <label style="font-size:12px; font-weight:700;">Select Purchase Order *</label>
-                                    <select name="po_number" required style="width:100%; border:1px solid #d6ddd3; border-radius:10px; padding:8px 10px; font-size:13px;">
-                                        <option value="">Choose Active PO...</option>
-                                        @foreach($purchaseOrders as $po)
-                                            @if($po->status === 'sent')
-                                                <option value="{{ $po->po_number }}">{{ $po->po_number }} — {{ $po->supplier->name }} (₱{{ number_format($po->total, 2) }})</option>
-                                            @endif
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label style="font-size:12px; font-weight:700;">Invoice Reference *</label>
-                                    <input type="text" name="invoice_number" required placeholder="e.g. INV-SUP-001" style="width:100%; border:1px solid #d6ddd3; border-radius:10px; padding:8px 10px; font-size:13px;" />
-                                </div>
-                                <div class="form-group">
-                                    <label style="font-size:12px; font-weight:700;">Invoice Amount (₱) *</label>
-                                    <input type="number" step="0.01" name="amount" required placeholder="0.00" style="width:100%; border:1px solid #d6ddd3; border-radius:10px; padding:8px 10px; font-size:13px;" />
-                                </div>
-                                <button type="submit" class="btn btn-primary" style="width:100%; padding:10px; font-size:13px; font-weight:700;">
-                                    Match Invoice
-                                </button>
-                            </form>
-                        </div>
-
                         <!-- Logs Section -->
                         <div class="mini-card side-section" data-section="logs" style="display:none">
                             <div class="mini-title">Recent Activities</div>
@@ -1081,13 +1067,6 @@
                                         <strong>PO Transmitted</strong>
                                         <div class="muted" style="font-size:12px;">{{ $po->po_number }} issued to {{ $po->supplier->name }}</div>
                                         <div style="font-size:10px; margin-top:4px; color:var(--muted);">{{ $po->updated_at->diffForHumans() }}</div>
-                                    </div>
-                                @endforeach
-                                @foreach($invoices->take(2) as $inv)
-                                    <div class="log-item" style="border-left: 3px solid #2354c9;">
-                                        <strong>Invoice Matched</strong>
-                                        <div class="muted" style="font-size:12px;">{{ $inv->invoice_number }} to {{ $inv->purchaseOrder->po_number ?? '—' }}</div>
-                                        <div style="font-size:10px; margin-top:4px; color:var(--muted);">{{ $inv->received_at->diffForHumans() }}</div>
                                     </div>
                                 @endforeach
                             </div>
@@ -1164,43 +1143,65 @@
                 document.body.removeChild(link);
             };
 
-            // --- Dynamic Order Management Sorting & Filtering ---
+            // --- Dynamic Order Management Sorting & Filtering & Searching ---
             const filterBtns = document.querySelectorAll('.po-filter-btn');
             const sortSelect = document.getElementById('po-sort-select');
+            const searchInput = document.getElementById('po-search-input');
             const tableBody = document.querySelector('#table-data-all tbody');
 
             if (tableBody && filterBtns.length) {
                 let currentFilter = 'all';
                 let currentSort = 'latest';
+                let currentQuery = '';
 
                 function applySortAndFilter() {
                     const rows = Array.from(tableBody.querySelectorAll('tr.po-row'));
+                    const isRejectedFilter = (currentFilter === 'rejected');
 
-                    // 1. Filter
+                    // Toggle header row columns if available
+                    const headerRow = document.getElementById('po-table-header-row');
+                    if (headerRow) {
+                        headerRow.querySelectorAll('.col-default').forEach(el => el.style.display = isRejectedFilter ? 'none' : '');
+                        headerRow.querySelectorAll('.col-rejected').forEach(el => el.style.display = isRejectedFilter ? '' : 'none');
+                    }
+
+                    // 1. Filter & Search
                     rows.forEach(row => {
                         const status = (row.dataset.status || '').toLowerCase();
-                        let show = false;
+                        const searchText = (row.dataset.search || row.textContent || '').toLowerCase();
+                        let matchesFilter = false;
 
                         if (currentFilter === 'all') {
-                            show = true;
+                            matchesFilter = true;
                         } else if (currentFilter === 'pending') {
-                            show = ['draft', 'pending', 'sent'].includes(status);
+                            matchesFilter = ['draft', 'pending', 'sent'].includes(status);
                         } else if (currentFilter === 'approved') {
-                            show = status === 'approved';
+                            matchesFilter = status === 'approved';
                         } else if (currentFilter === 'rejected') {
-                            show = status === 'rejected' || status === 'cancelled';
+                            matchesFilter = status === 'rejected' || status === 'cancelled';
                         } else if (currentFilter === 'completed') {
-                            show = status === 'received' || status === 'completed';
+                            matchesFilter = status === 'received' || status === 'completed';
                         }
 
+                        let matchesQuery = true;
+                        if (currentQuery) {
+                            matchesQuery = searchText.includes(currentQuery);
+                        }
+
+                        const show = matchesFilter && matchesQuery;
                         row.style.display = show ? '' : 'none';
+
+                        if (show) {
+                            row.querySelectorAll('.col-default').forEach(el => el.style.display = isRejectedFilter ? 'none' : '');
+                            row.querySelectorAll('.col-rejected').forEach(el => el.style.display = isRejectedFilter ? '' : 'none');
+                        }
                     });
 
                     // 2. Sort
                     const visibleRows = rows.filter(r => r.style.display !== 'none');
                     
                     visibleRows.sort((a, b) => {
-                        if (currentSort === 'latest') {
+                        if (currentSort === 'latest' || currentSort === 'date_created') {
                             return Number(b.dataset.date || 0) - Number(a.dataset.date || 0);
                         } else if (currentSort === 'oldest') {
                             return Number(a.dataset.date || 0) - Number(b.dataset.date || 0);
@@ -1211,8 +1212,6 @@
                             return pB - pA;
                         } else if (currentSort === 'po_number') {
                             return (a.dataset.poNumber || '').localeCompare(b.dataset.poNumber || '');
-                        } else if (currentSort === 'date_created') {
-                            return Number(b.dataset.date || 0) - Number(a.dataset.date || 0);
                         } else if (currentSort === 'vendor') {
                             return (a.dataset.vendor || '').localeCompare(b.dataset.vendor || '');
                         } else if (currentSort === 'status') {
@@ -1245,6 +1244,13 @@
                 if (sortSelect) {
                     sortSelect.addEventListener('change', function() {
                         currentSort = this.value;
+                        applySortAndFilter();
+                    });
+                }
+
+                if (searchInput) {
+                    searchInput.addEventListener('input', function() {
+                        currentQuery = this.value.trim().toLowerCase();
                         applySortAndFilter();
                     });
                 }

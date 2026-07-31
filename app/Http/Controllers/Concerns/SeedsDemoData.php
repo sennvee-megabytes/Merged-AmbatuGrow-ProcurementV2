@@ -92,7 +92,7 @@ trait SeedsDemoData
             'PR-2026-090' => [
                 'id' => 'PR-2026-090',
                 'title' => 'Ops Office Supplies',
-                'requestor' => 'Robin Iapa',
+                'requestor' => 'Emily Johnson',
                 'department' => 'Ops',
                 'needed_by' => '2026-07-05',
                 'purpose' => 'Monthly office supplies restock.',

@@ -14,8 +14,13 @@ class Product extends Model
     protected $table = 'products';
 
     protected $fillable = [
-        'sku', 'name', 'description', 'category_id', 'uom_id', 'currency_id', 'base_price', 'min_quantity_threshold', 'lead_time_days'
+        'supplier_id', 'sku', 'name', 'description', 'category_id', 'uom_id', 'currency_id', 'base_price', 'min_quantity_threshold', 'lead_time_days'
     ];
+
+    public function supplier(): BelongsTo
+    {
+        return $this->belongsTo(Supplier::class, 'supplier_id');
+    }
 
     public function category(): BelongsTo
     {

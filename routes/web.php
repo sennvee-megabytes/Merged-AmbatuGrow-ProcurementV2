@@ -58,11 +58,11 @@ Route::prefix('order-management')->middleware(['auth'])->group(function () {
     Route::get('/purchase-orders/{purchaseOrder}/view-pdf', [PurchaseOrderController::class, 'streamPdf'])->name('purchase_orders.view_pdf');
     Route::post('/purchase-orders/{purchaseOrder}/send', [PurchaseOrderController::class, 'send'])->name('purchase_orders.send');
     Route::post('/purchase-orders/{purchaseOrder}/status', [PurchaseOrderController::class, 'updateStatus'])->name('purchase_orders.status');
-    Route::post('/match-invoice', [PurchaseOrderController::class, 'matchInvoice'])->name('purchase_orders.match_invoice');
 });
 
 Route::prefix('purchase-and-requisition')->middleware(['auth', 'approver'])->group(function () {
     Route::get('/', [ApprovalController::class, 'index'])->name('approvals.index');
+    Route::get('/pending-count', [ApprovalController::class, 'pendingCount'])->name('approvals.pending_count');
     Route::get('/approvals/{requisition}', [ApprovalController::class, 'show'])->name('approvals.show');
     Route::post('/approvals/{requisition}/act', [ApprovalController::class, 'act'])->name('approvals.act');
 
@@ -91,8 +91,15 @@ Route::prefix('supplier-management')->middleware(['auth'])->group(function () {
     Route::prefix('/suppliers/{supplier}')->group(function () {
         Route::get('/', [SupplierController::class, 'show'])->name('suppliers.show');
         Route::get('/products', [SupplierController::class, 'products'])->name('suppliers.products');
+        Route::post('/products', [SupplierController::class, 'storeProduct'])->name('suppliers.products.store');
+        Route::put('/products/{product}', [SupplierController::class, 'updateProduct'])->name('suppliers.products.update');
+        Route::post('/products/{product}', [SupplierController::class, 'updateProduct'])->name('suppliers.products.update.post');
+        Route::delete('/products/{product}', [SupplierController::class, 'destroyProduct'])->name('suppliers.products.destroy');
+        Route::post('/products/{product}/delete', [SupplierController::class, 'destroyProduct'])->name('suppliers.products.destroy.post');
         Route::get('/purchase-history', [SupplierController::class, 'purchaseHistory'])->name('suppliers.purchase-history');
         Route::get('/contract', [SupplierController::class, 'contract'])->name('suppliers.contract');
+        Route::post('/contract', [SupplierController::class, 'updateContract'])->name('suppliers.updateContract');
+        Route::put('/contract', [SupplierController::class, 'updateContract'])->name('suppliers.updateContract.put');
         Route::get('/performance', [SupplierController::class, 'performance'])->name('suppliers.performance');
         Route::post('/block', [SupplierController::class, 'block'])->name('suppliers.block');
         Route::post('/unblock', [SupplierController::class, 'unblock'])->name('suppliers.unblock');

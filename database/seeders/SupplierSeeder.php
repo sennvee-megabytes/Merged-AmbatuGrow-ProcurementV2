@@ -511,10 +511,6 @@ class SupplierSeeder extends Seeder
                 $status = 'Blacklisted';
                 $reason = $reasons[$i % count($reasons)];
                 $risk = $risks[$i % count($risks)];
-            } elseif ($i > 105) {
-                $status = 'Pending Verification';
-                $reason = null;
-                $risk = 'Low';
             } else {
                 $status = 'Active';
                 $reason = null;

@@ -12,7 +12,53 @@ class PurchaseOrderController extends Controller
 {
     public function index()
     {
-        $purchaseOrders = PurchaseOrder::with('supplier', 'items', 'requisition')
+        // Sync rejected requisitions into purchase_orders table to ensure all rejected approvals exist in order management
+        $rejectedReqs = \App\Models\Requisition::where('status', 'rejected')->get();
+        foreach ($rejectedReqs as $rReq) {
+            $po = PurchaseOrder::where('requisition_id', $rReq->id)->first();
+            if (!$po) {
+                $supplier = $rReq->supplier_id ? Supplier::find($rReq->supplier_id) : null;
+                if (!$supplier) {
+                    $supplier = Supplier::where('status', 'active')->first() ?? Supplier::first();
+                }
+                if (!$supplier) {
+                    $supplier = Supplier::create([
+                        'name' => 'Ambatugrow General Supplier',
+                        'status' => 'active',
+                        'contact_person' => 'Sales Department',
+                        'email' => 'sales@ambatugrow.test',
+                        'phone' => '(000) 000-0000',
+                        'address' => 'Indang, Cavite',
+                        'city' => 'Cavite',
+                    ]);
+                }
+                $year = date('Y');
+                $latest = PurchaseOrder::where('po_number', 'like', "PO-{$year}-%")
+                    ->orderByRaw('length(po_number) desc, po_number desc')
+                    ->first();
+                $nextNumber = 1;
+                if ($latest) {
+                    $parts = explode('-', $latest->po_number);
+                    $lastNumber = (int) end($parts);
+                    $nextNumber = $lastNumber + 1;
+                }
+                $poNumber = 'PO-' . $year . '-' . str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
+
+                PurchaseOrder::create([
+                    'po_number' => $poNumber,
+                    'supplier_id' => $supplier->id,
+                    'requisition_id' => $rReq->id,
+                    'status' => 'rejected',
+                    'total' => $rReq->total,
+                    'issued_at' => $rReq->updated_at ?? now(),
+                    'created_by' => $rReq->requestor_id,
+                ]);
+            } else if (!in_array($po->status, ['rejected', 'cancelled'])) {
+                $po->update(['status' => 'rejected']);
+            }
+        }
+
+        $purchaseOrders = PurchaseOrder::with(['supplier', 'items', 'requisition.approvalSteps.approver', 'creator'])
             ->orderBy('created_at', 'desc')
             ->orderBy('id', 'desc')
             ->get();
@@ -24,14 +70,10 @@ class PurchaseOrderController extends Controller
             'draft' => $purchaseOrders->where('status', 'draft')->count(),
             'sent' => $purchaseOrders->where('status', 'sent')->count(),
             'overdue' => $purchaseOrders->filter(function ($po) {
-                return $po->status !== 'received' && $po->expected_delivery && $po->expected_delivery->isPast();
+                return !in_array($po->status, ['received', 'rejected', 'cancelled']) && $po->expected_delivery && $po->expected_delivery->isPast();
             })->count(),
+            'rejected' => $purchaseOrders->whereIn('status', ['rejected', 'cancelled'])->count(),
         ];
-
-        // Fetch matched invoices
-        $invoices = \App\Models\Invoice::with('supplier', 'purchaseOrder')
-            ->orderBy('received_at', 'desc')
-            ->get();
 
         // Calculate spend data per supplier
         $spendData = $purchaseOrders->groupBy('supplier_id')->map(function ($pos) {
@@ -41,7 +83,7 @@ class PurchaseOrderController extends Controller
             ];
         })->values();
 
-        return view('purchase_orders.procurement', compact('purchaseOrders', 'suppliers', 'stats', 'invoices', 'spendData'));
+        return view('purchase_orders.procurement', compact('purchaseOrders', 'suppliers', 'stats', 'spendData'));
     }
 
     public function create()
@@ -96,11 +138,23 @@ class PurchaseOrderController extends Controller
         $total = 0;
         foreach($data['items'] as $it){
             $line = $it['quantity'] * $it['unit_price'];
+
+            $unit = $it['unit'] ?? $it['uom'] ?? null;
+            if (!$unit || $unit === 'No UOM Assigned') {
+                $productMatch = \App\Models\Product::with('uom')
+                    ->where('sku', $it['sku'] ?? '')
+                    ->orWhere('name', $it['name'])
+                    ->first();
+                if ($productMatch && $productMatch->uom) {
+                    $unit = $productMatch->uom->uom_name ?: $productMatch->uom->uom_code;
+                }
+            }
+
             $po->items()->create([
                 'sku' => $it['sku'] ?? null,
                 'name' => $it['name'],
                 'quantity' => $it['quantity'],
-                'unit' => $it['unit'] ?? $it['uom'] ?? 'Unit',
+                'unit' => $unit ?: 'Unit',
                 'unit_price' => $it['unit_price'],
                 'line_total' => $line,
             ]);
@@ -172,25 +226,6 @@ class PurchaseOrderController extends Controller
         $purchaseOrder->status = $request->input('status');
         $purchaseOrder->save();
         return back()->with('status','Status updated');
-    }
-
-    public function matchInvoice(Request $request)
-    {
-        // naive match: find PO by po_number and associate invoice
-        $request->validate(['po_number'=>'required','invoice_number'=>'required','amount'=>'required|numeric']);
-        $po = PurchaseOrder::where('po_number',$request->po_number)->first();
-        if(!$po) return back()->with('error','PO not found');
-
-        // create invoice
-        $inv = \App\Models\Invoice::create([
-            'invoice_number' => $request->invoice_number,
-            'supplier_id' => $po->supplier_id,
-            'purchase_order_id' => $po->id,
-            'amount' => $request->amount,
-            'received_at' => now(),
-        ]);
-
-        return back()->with('status','Invoice matched to PO');
     }
 
     public function downloadPdf(PurchaseOrder $purchaseOrder)

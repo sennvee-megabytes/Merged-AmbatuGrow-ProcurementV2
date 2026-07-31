@@ -60,5 +60,45 @@ class PurchaseOrder extends Model
     {
         return $this->hasMany(SupplierInvoice::class, 'po_id');
     }
+
+    public function scopeRejected($query)
+    {
+        return $query->whereIn('status', ['rejected', 'cancelled']);
+    }
+
+    public function getRejectedStepAttribute()
+    {
+        if ($this->requisition) {
+            return $this->requisition->approvalSteps()->where('status', 'rejected')->latest()->first();
+        }
+        return null;
+    }
+
+    public function getRejectedByNameAttribute()
+    {
+        $step = $this->rejected_step;
+        if ($step && $step->approver) {
+            return $step->approver->name;
+        }
+        return $this->creator?->name ?? 'System Admin';
+    }
+
+    public function getRejectedDateFormattedAttribute()
+    {
+        $step = $this->rejected_step;
+        if ($step && $step->acted_at) {
+            return $step->acted_at->format('M d, Y');
+        }
+        return $this->updated_at ? $this->updated_at->format('M d, Y') : '—';
+    }
+
+    public function getRejectionReasonTextAttribute()
+    {
+        $step = $this->rejected_step;
+        if ($step && !empty($step->comment)) {
+            return $step->comment;
+        }
+        return 'Budget Exceeded / Policy Non-compliance';
+    }
 }
 

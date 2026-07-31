@@ -45,6 +45,11 @@ class Requisition extends Model
         return $this->hasMany(RequisitionComment::class)->latest();
     }
 
+    public function purchaseOrder()
+    {
+        return $this->hasOne(PurchaseOrder::class, 'requisition_id');
+    }
+
     /**
      * The approval step that is currently awaiting action.
      */
@@ -58,9 +63,24 @@ class Requisition extends Model
 
     public function statusLabel(): string
     {
+        if ($this->status === 'pending_approval') {
+            $current = $this->currentStep();
+            if ($current) {
+                if ($current->step_type === 'finance_approval' || (int)$current->step_order === 2) {
+                    return 'Pending Finance Approval';
+                }
+                if ($current->step_type === 'manager_approval' || (int)$current->step_order === 1) {
+                    return 'Pending Manager Approval';
+                }
+                if ($current->step_type === 'department_head_approval' || (int)$current->step_order === 3) {
+                    return 'Pending Head Approval';
+                }
+            }
+            return 'Pending Approval';
+        }
+
         return match ($this->status) {
             'draft' => 'Draft',
-            'pending_approval' => 'Pending Approval',
             'approved' => 'Approved',
             'rejected' => 'Rejected',
             default => ucfirst($this->status),

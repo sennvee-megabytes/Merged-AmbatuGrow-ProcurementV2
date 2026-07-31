@@ -704,6 +704,14 @@
                         <div class="absolute left-0 top-1/4 bottom-1/4 w-1 bg-white rounded-r"></div>
                     @endif
                     <i data-lucide="clipboard-list" class="w-5 h-5"></i>
+
+                    @php $pCount = $pendingApprovalCount ?? 0; @endphp
+                    <span id="pr-pending-badge"
+                          class="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 bg-red-600 text-white rounded-full flex items-center justify-center text-[10px] font-black shadow-md border-2 border-white transition-all duration-300 {{ $pCount > 0 ? '' : 'hidden' }}"
+                          style="{{ $pCount > 0 ? 'display: flex;' : 'display: none;' }}"
+                          data-count="{{ $pCount }}">
+                        {{ $pCount > 0 ? $pCount : '' }}
+                    </span>
                 </a>
                 
                 <!-- Supplier Directory -->
@@ -816,9 +824,9 @@
                             <i class="fa-solid fa-circle-check w-5 text-center text-base shrink-0"></i>
                             <span>Active Suppliers</span>
                         </a>
-                        <a href="{{ route('suppliers.pending') }}" class="flex items-center justify-start gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all w-full text-left {{ request()->routeIs('suppliers.pending') ? 'bg-[#235c2b] text-white shadow-sm' : 'text-slate-800 hover:bg-[#e8ece6] hover:text-slate-900' }}">
-                            <i class="fa-solid fa-clock w-5 text-center text-base shrink-0"></i>
-                            <span>Pending Verification</span>
+                        <a href="{{ route('suppliers.blacklisted') }}" class="flex items-center justify-start gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all w-full text-left {{ request()->routeIs('suppliers.blacklisted') ? 'bg-[#235c2b] text-white shadow-sm' : 'text-slate-800 hover:bg-[#e8ece6] hover:text-slate-900' }}">
+                            <i class="fa-solid fa-ban w-5 text-center text-base shrink-0"></i>
+                            <span>Blocked Suppliers</span>
                         </a>
                     </nav>
                 </div>
@@ -880,19 +888,6 @@
                         <div class="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-slate-800 rotate-45"></div>
                         <span>✅</span>
                         <span>Active Suppliers</span>
-                    </div>
-                </div>
-
-                <!-- Pending Verification Tooltip -->
-                <div class="relative group/tooltip">
-                    <a href="{{ route('suppliers.pending') }}" 
-                       class="w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-200 ease-in-out hover:scale-105 {{ request()->routeIs('suppliers.pending') ? 'bg-[#235c2b] text-white shadow-md' : 'text-slate-700 bg-white/50 hover:bg-[#e9f5ee] hover:text-[#1f5c3d] shadow-sm' }}">
-                        <span class="text-lg select-none">⏳</span>
-                    </a>
-                    <div class="pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-3 z-50 whitespace-nowrap rounded-lg bg-slate-800 px-3 py-2 text-sm font-semibold text-white shadow-lg opacity-0 translate-x-2 transition-all duration-200 ease-in-out group-hover/tooltip:opacity-100 group-hover/tooltip:translate-x-0 flex items-center gap-2">
-                        <div class="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-slate-800 rotate-45"></div>
-                        <span>⏳</span>
-                        <span>Pending Verification</span>
                     </div>
                 </div>
 
@@ -980,6 +975,33 @@
             // Re-trigger icon creation on toggle just in case
             lucide.createIcons();
         }
+
+        window.updatePendingBadge = function() {
+            fetch("{{ route('approvals.pending_count') }}")
+                .then(res => res.json())
+                .then(data => {
+                    const badge = document.getElementById('pr-pending-badge');
+                    if (badge) {
+                        const count = data.count || 0;
+                        badge.setAttribute('data-count', count);
+                        if (count > 0) {
+                            badge.innerText = count;
+                            badge.classList.remove('hidden');
+                            badge.style.display = 'flex';
+                        } else {
+                            badge.innerText = '';
+                            badge.classList.add('hidden');
+                            badge.style.display = 'none';
+                        }
+                    }
+                })
+                .catch(() => {});
+        };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            updatePendingBadge();
+            setInterval(updatePendingBadge, 3000);
+        });
     </script>
 
     <!-- Unified Right-Side Panel Backdrop -->
@@ -1377,7 +1399,7 @@
     <div x-show="showRequisitionModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" @click="showRequisitionModal = false"></div>
         
-        <form action="{{ route('requisitions.store') }}" method="POST" class="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col z-50 animate-in fade-in zoom-in duration-200">
+        <form action="{{ route('requisitions.store') }}" method="POST" @submit="if(reqItems.some(i => !i.unit || i.unit === 'No UOM Assigned')) { $event.preventDefault(); alert('Cannot submit requisition: One or more selected items have \'No UOM Assigned\'. Please select valid items with assigned UOM.'); return false; }" class="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col z-50 animate-in fade-in zoom-in duration-200">
             @csrf
             <input type="hidden" name="action" value="continue">
             <input type="hidden" name="title" x-bind:value="'PR - ' + (reqItems[0] && reqItems[0].name ? reqItems[0].name : 'Office Supplies') + ' (' + new Date().toLocaleDateString() + ')'">
@@ -1448,10 +1470,10 @@
 
                             <!-- Table Header (hidden on mobile) -->
                             <div class="hidden md:grid grid-cols-12 gap-2 px-4 py-2 bg-slate-100 rounded-lg text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">
-                                <div class="col-span-2">SKU</div>
-                                <div class="col-span-3">Item Name</div>
-                                <div class="col-span-1">UOM</div>
-                                <div class="col-span-1">Qty</div>
+                                <div class="col-span-1">SKU</div>
+                                <div class="col-span-2">Item Name</div>
+                                <div class="col-span-2 text-center">UOM</div>
+                                <div class="col-span-2 text-center">Qty</div>
                                 <div class="col-span-2">Unit Cost (₱)</div>
                                 <div class="col-span-2 text-right">Total</div>
                                 <div class="col-span-1 text-center">Action</div>
@@ -1472,21 +1494,21 @@
                                                 </template>
                                             </select>
                                         </div>
-                                        <div class="col-span-12 md:col-span-2">
+                                        <div class="col-span-12 md:col-span-1">
                                             <label class="block text-[10px] font-semibold text-slate-400 mb-0.5 md:hidden">SKU</label>
                                             <input type="text" x-model="item.sku" :name="'items[' + index + '][sku]'" placeholder="e.g. AGRI-042" class="w-full px-2 py-1.5 border border-slate-200 rounded-lg text-xs">
                                         </div>
-                                        <div class="col-span-12 md:col-span-3">
+                                        <div class="col-span-12 md:col-span-2">
                                             <label class="block text-[10px] font-semibold text-slate-400 mb-0.5 md:hidden">Item Name</label>
                                             <input type="text" x-model="item.name" :name="'items[' + index + '][name]'" required placeholder="e.g. Rice Seeds" class="w-full px-2 py-1.5 border border-slate-200 rounded-lg text-xs truncate">
                                         </div>
-                                        <div class="col-span-6 md:col-span-1">
+                                        <div class="col-span-6 md:col-span-2">
                                             <label class="block text-[10px] font-semibold text-slate-400 mb-0.5 md:hidden">UOM</label>
-                                            <input type="text" x-model="item.unit" :name="'items[' + index + '][unit]'" required placeholder="Unit" class="w-full px-2 py-1.5 border border-slate-200 rounded-lg text-xs">
+                                            <input type="text" x-model="item.unit" :name="'items[' + index + '][unit]'" required readonly placeholder="UOM" class="w-full px-2 py-1.5 border border-slate-200 rounded-lg text-xs bg-slate-100 cursor-not-allowed text-slate-700 font-semibold text-center whitespace-nowrap overflow-visible">
                                         </div>
-                                        <div class="col-span-6 md:col-span-1">
+                                        <div class="col-span-6 md:col-span-2">
                                             <label class="block text-[10px] font-semibold text-slate-400 mb-0.5 md:hidden">Qty</label>
-                                            <input type="number" x-model.number="item.qty" :name="'items[' + index + '][qty]'" required min="1" class="w-full px-2 py-1.5 border border-slate-200 rounded-lg text-xs">
+                                            <input type="number" x-model.number="item.qty" :name="'items[' + index + '][qty]'" required min="1" step="1" class="w-full px-2 py-1.5 border border-slate-200 rounded-lg text-xs font-semibold text-center whitespace-nowrap overflow-visible focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
                                         </div>
                                         <div class="col-span-6 md:col-span-2">
                                             <label class="block text-[10px] font-semibold text-slate-400 mb-0.5 md:hidden">Unit Cost (₱)</label>
