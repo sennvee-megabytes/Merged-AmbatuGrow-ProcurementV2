@@ -115,15 +115,24 @@ class Supplier extends Model
     public function getProductsAttribute()
     {
         return $this->productsRelation()->with(['category', 'uom'])->get()->map(function ($p) {
+            $code = strtoupper($p->pivot->supplier_sku ?? $p->sku ?? '');
+            $unitPrice = (float) ($p->pivot->unit_price ?? $p->base_price ?? 0);
+            $moq = (float) ($p->min_quantity_threshold ?? 10);
+            $leadTime = (int) ($p->pivot->lead_time_days ?? $p->lead_time_days ?? 3);
+
             return [
+                'id' => $p->id,
                 'name' => $p->name,
-                'code' => $p->pivot->supplier_sku ?? $p->sku,
-                'category' => $p->category ? $p->category->category_name : '',
-                'unit' => $p->uom ? $p->uom->uom_code : '',
-                'price' => '₱' . number_format((float) ($p->pivot->unit_price ?? $p->base_price), 2),
+                'code' => $code,
+                'category' => $p->category ? $p->category->category_name : 'Grains',
+                'unit' => $p->uom ? $p->uom->uom_code : 'Sack',
+                'price' => '₱' . number_format($unitPrice, 2),
+                'raw_unit_price' => $unitPrice,
                 'stock' => 'In Stock',
-                'moq' => '10 Units',
-                'lead_time' => ($p->pivot->lead_time_days ?? $p->lead_time_days ?? 3) . ' Days',
+                'moq' => $moq . ' Units',
+                'raw_moq' => $moq,
+                'lead_time' => $leadTime . ' Days',
+                'raw_lead_time' => $leadTime,
             ];
         })->toArray();
     }
@@ -131,36 +140,52 @@ class Supplier extends Model
     // Accessor: format purchase history list to match views structure
     public function getPurchaseHistoryAttribute()
     {
-        return $this->purchaseOrders()->with(['poItems.product', 'poItems.uom'])->get()->flatMap(function ($po) {
-            return $po->poItems->map(function ($item) use ($po) {
+        return $this->purchaseOrders()->with(['poItems.product', 'poItems.uom', 'items'])->get()->flatMap(function ($po) {
+            $date = $po->order_date ? $po->order_date->format('Y-m-d') : ($po->issued_at ? $po->issued_at->format('Y-m-d') : ($po->created_at ? $po->created_at->format('Y-m-d') : ''));
+            $statusLabel = ucfirst($po->status ?? 'Active');
+
+            if ($po->items && $po->items->count() > 0) {
+                return $po->items->map(function ($item) use ($po, $date, $statusLabel) {
+                    return [
+                        'date' => $date,
+                        'po_number' => $po->po_number,
+                        'product' => $item->name,
+                        'quantity' => $item->quantity . ' ' . ($item->unit ?? 'Unit'),
+                        'amount' => $item->line_total ?? ($item->quantity * $item->unit_price),
+                        'status' => $statusLabel,
+                    ];
+                });
+            }
+
+            return $po->poItems->map(function ($item) use ($po, $date, $statusLabel) {
                 return [
-                    'date' => $po->order_date ? $po->order_date->format('Y-m-d') : '',
+                    'date' => $date,
                     'po_number' => $po->po_number,
-                    'product' => $item->product ? $item->product->name : '',
-                    'quantity' => $item->quantity . ' ' . ($item->uom ? $item->uom->uom_code : ''),
+                    'product' => $item->product ? $item->product->name : 'Item',
+                    'quantity' => $item->quantity . ' ' . ($item->uom ? $item->uom->uom_code : 'Unit'),
                     'amount' => $item->quantity * $item->unit_price,
-                    'status' => $po->status,
+                    'status' => $statusLabel,
                 ];
             });
         })->toArray();
     }
 
-    // Accessor: format contract details to match views structure
     public function getContractAttribute()
     {
         $daysRemaining = 0;
         if ($this->contract_end) {
-            $daysRemaining = now()->diffInDays($this->contract_end, false);
-            $daysRemaining = $daysRemaining < 0 ? 0 : $daysRemaining;
+            $end = \Illuminate\Support\Carbon::parse($this->contract_end)->startOfDay();
+            $now = now()->startOfDay();
+            $diff = (int) $now->diffInDays($end, false);
+            $daysRemaining = $diff < 0 ? 0 : $diff;
         }
 
         return [
-            'start' => $this->contract_start ? $this->contract_start->format('M. d, Y') : '',
-            'end' => $this->contract_end ? $this->contract_end->format('M. d, Y') : '',
+            'start' => $this->contract_start ? \Illuminate\Support\Carbon::parse($this->contract_start)->format('M. d, Y') : '',
+            'end' => $this->contract_end ? \Illuminate\Support\Carbon::parse($this->contract_end)->format('M. d, Y') : '',
             'duration' => $this->contract_duration ?? '',
-            'days_remaining' => $daysRemaining . ' Days',
+            'days_remaining' => (int) $daysRemaining . ' Days',
             'payment_terms' => $this->payment_terms ?? '',
-            'auto_renewal' => $this->auto_renewal ? 'Yes' : 'No',
             'document' => $this->contract_document ?? 'No Document',
             'document_size' => $this->contract_document_size ?? '0 KB',
             'scope' => $this->contract_scope ?? [],
@@ -217,9 +242,8 @@ class Supplier extends Model
         return $this->hasMany(SupplierInvoice::class, 'supplier_id');
     }
 
-    // Helper for Eloquent queries
     public function products()
     {
-        return $this->productsRelation();
+        return $this->hasMany(Product::class, 'supplier_id');
     }
 }

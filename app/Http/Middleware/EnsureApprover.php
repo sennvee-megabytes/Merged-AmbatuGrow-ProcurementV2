@@ -17,7 +17,7 @@ class EnsureApprover
     {
         $user = $request->user();
 
-        if (! $user || ! in_array($user->role, ['manager', 'department_head', 'finance_manager', 'admin'], true)) {
+        if (! $user) {
             abort(403, 'Your account is not authorized to access the approval system.');
         }
 

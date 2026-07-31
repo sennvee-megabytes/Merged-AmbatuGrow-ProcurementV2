@@ -48,35 +48,82 @@
 
             {{-- Top Row: Details (Left) + Document/Scope (Right) --}}
             <div class="grid grid-cols-2 gap-5">
-                {{-- Contract Details --}}
+                {{-- Contract Details Form --}}
                 <div class="card">
                     <h2 class="card-title">Contract Details</h2>
-                    <dl>
-                        <div class="info-row">
-                            <dt>Contract Start</dt>
-                            <dd>{{ $supplier['contract']['start'] }}</dd>
+
+                    @if (session('status'))
+                        <div class="mb-4 p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-xs font-semibold text-emerald-800">
+                            {{ session('status') }}
                         </div>
-                        <div class="info-row">
-                            <dt>Contract End</dt>
-                            <dd>{{ $supplier['contract']['end'] }}</dd>
+                    @endif
+
+                    @if ($errors->any())
+                        <div class="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700">
+                            <ul class="list-disc list-inside">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
                         </div>
-                        <div class="info-row">
-                            <dt>Contract Duration</dt>
-                            <dd>{{ $supplier['contract']['duration'] }}</dd>
+                    @endif
+
+                    <form method="POST" action="{{ route('suppliers.updateContract', $supplier['slug']) }}" class="flex flex-col gap-4">
+                        @csrf
+                        <div>
+                            <label class="form-label">Contract Start <span class="text-red-500">*</span></label>
+                            <input type="date" name="contract_start" id="contract_start" 
+                                value="{{ old('contract_start', !empty($supplier['contract_start']) ? \Illuminate\Support\Carbon::parse($supplier['contract_start'])->format('Y-m-d') : (!empty($supplier['contract']['start']) ? \Illuminate\Support\Carbon::parse($supplier['contract']['start'])->format('Y-m-d') : '')) }}" 
+                                class="form-input @error('contract_start') !border-red-500 @enderror" required>
+                            @error('contract_start')
+                                <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span>
+                            @enderror
                         </div>
-                        <div class="info-row">
-                            <dt>Days Remaining</dt>
-                            <dd>{{ $supplier['contract']['days_remaining'] }}</dd>
+
+                        <div>
+                            <label class="form-label">Contract End <span class="text-red-500">*</span></label>
+                            <input type="date" name="contract_end" id="contract_end" 
+                                value="{{ old('contract_end', !empty($supplier['contract_end']) ? \Illuminate\Support\Carbon::parse($supplier['contract_end'])->format('Y-m-d') : (!empty($supplier['contract']['end']) ? \Illuminate\Support\Carbon::parse($supplier['contract']['end'])->format('Y-m-d') : '')) }}" 
+                                class="form-input @error('contract_end') !border-red-500 @enderror" required>
+                            @error('contract_end')
+                                <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span>
+                            @enderror
                         </div>
-                        <div class="info-row">
-                            <dt>Payment Terms</dt>
-                            <dd>{{ $supplier['contract']['payment_terms'] }}</dd>
+
+                        <div>
+                            <label class="form-label">Contract Duration</label>
+                            <input type="text" name="contract_duration" id="contract_duration" 
+                                value="{{ old('contract_duration', $supplier['contract_duration'] ?? $supplier['contract']['duration'] ?? '') }}" 
+                                readonly class="form-input bg-slate-100 cursor-not-allowed">
                         </div>
-                        <div class="info-row !border-0">
-                            <dt>Auto-renewal</dt>
-                            <dd>{{ $supplier['contract']['auto_renewal'] === 'Yes' ? 'Enabled' : 'Disabled' }}</dd>
+
+                        <div>
+                            <label class="form-label">Days Remaining</label>
+                            <input type="text" value="{{ $supplier['contract']['days_remaining'] ?? '—' }}" 
+                                readonly class="form-input bg-slate-100 cursor-not-allowed">
                         </div>
-                    </dl>
+
+                        <div>
+                            <label class="form-label">Payment Terms</label>
+                            @php
+                                $currentTerms = old('payment_terms', $supplier['payment_terms'] ?? $supplier['contract']['payment_terms'] ?? 'Net 30');
+                            @endphp
+                            <select name="payment_terms" class="form-input @error('payment_terms') !border-red-500 @enderror">
+                                @foreach(['COD', 'Net 15', 'Net 30', 'Net 60', 'Net 90', 'Advance Payment', 'Installment'] as $termOption)
+                                    <option value="{{ $termOption }}" {{ $currentTerms === $termOption ? 'selected' : '' }}>
+                                        {{ $termOption }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('payment_terms')
+                                <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="pt-2 flex justify-end">
+                            <button type="submit" class="btn-primary text-xs py-2 px-4">Update Contract</button>
+                        </div>
+                    </form>
                 </div>
 
                 {{-- Document & Scope --}}
@@ -141,4 +188,44 @@
                     </tbody>
                 </table>
             </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const startInput = document.getElementById('contract_start');
+            const endInput = document.getElementById('contract_end');
+            const durationInput = document.getElementById('contract_duration');
+
+            function calculateDuration() {
+                if (!startInput || !endInput || !durationInput) return;
+
+                const startVal = startInput.value;
+                const endVal = endInput.value;
+
+                if (startVal && endVal) {
+                    const startDate = new Date(startVal);
+                    const endDate = new Date(endVal);
+
+                    if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
+                        const diffTime = endDate.getTime() - startDate.getTime();
+                        const diffDays = Math.round(diffTime / (1000 * 3600 * 24));
+
+                        if (diffDays >= 0) {
+                            durationInput.value = diffDays + ' days';
+                        } else {
+                            durationInput.value = '0 days';
+                        }
+                    }
+                }
+            }
+
+            if (startInput && endInput) {
+                startInput.addEventListener('change', calculateDuration);
+                startInput.addEventListener('input', calculateDuration);
+                endInput.addEventListener('change', calculateDuration);
+                endInput.addEventListener('input', calculateDuration);
+
+                calculateDuration();
+            }
+        });
+    </script>
 @endsection

@@ -91,8 +91,15 @@ Route::prefix('supplier-management')->middleware(['auth'])->group(function () {
     Route::prefix('/suppliers/{supplier}')->group(function () {
         Route::get('/', [SupplierController::class, 'show'])->name('suppliers.show');
         Route::get('/products', [SupplierController::class, 'products'])->name('suppliers.products');
+        Route::post('/products', [SupplierController::class, 'storeProduct'])->name('suppliers.products.store');
+        Route::put('/products/{product}', [SupplierController::class, 'updateProduct'])->name('suppliers.products.update');
+        Route::post('/products/{product}', [SupplierController::class, 'updateProduct'])->name('suppliers.products.update.post');
+        Route::delete('/products/{product}', [SupplierController::class, 'destroyProduct'])->name('suppliers.products.destroy');
+        Route::post('/products/{product}/delete', [SupplierController::class, 'destroyProduct'])->name('suppliers.products.destroy.post');
         Route::get('/purchase-history', [SupplierController::class, 'purchaseHistory'])->name('suppliers.purchase-history');
         Route::get('/contract', [SupplierController::class, 'contract'])->name('suppliers.contract');
+        Route::post('/contract', [SupplierController::class, 'updateContract'])->name('suppliers.updateContract');
+        Route::put('/contract', [SupplierController::class, 'updateContract'])->name('suppliers.updateContract.put');
         Route::get('/performance', [SupplierController::class, 'performance'])->name('suppliers.performance');
         Route::post('/block', [SupplierController::class, 'block'])->name('suppliers.block');
         Route::post('/unblock', [SupplierController::class, 'unblock'])->name('suppliers.unblock');

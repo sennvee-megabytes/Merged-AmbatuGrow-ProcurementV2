@@ -45,6 +45,11 @@ class Requisition extends Model
         return $this->hasMany(RequisitionComment::class)->latest();
     }
 
+    public function purchaseOrder()
+    {
+        return $this->hasOne(PurchaseOrder::class, 'requisition_id');
+    }
+
     /**
      * The approval step that is currently awaiting action.
      */

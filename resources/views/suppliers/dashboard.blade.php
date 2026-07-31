@@ -113,36 +113,35 @@
                     {{-- SVG Donut --}}
                     <svg width="90" height="90" viewBox="0 0 90 90" class="shrink-0">
                         <circle cx="45" cy="45" r="34" fill="none" stroke="#E5E7EB" stroke-width="18"/>
-                        {{-- Others 10% --}}
-                        <circle cx="45" cy="45" r="34" fill="none" stroke="#D1D5DB" stroke-width="18"
-                            stroke-dasharray="{{ 2 * 3.14159 * 34 * 0.10 }} {{ 2 * 3.14159 * 34 }}"
-                            stroke-dashoffset="{{ 2 * 3.14159 * 34 * 0.0 }}"
-                            transform="rotate(-90 45 45)"/>
-                        {{-- Vegetables 20% --}}
-                        <circle cx="45" cy="45" r="34" fill="none" stroke="#6EE7B7" stroke-width="18"
-                            stroke-dasharray="{{ 2 * 3.14159 * 34 * 0.20 }} {{ 2 * 3.14159 * 34 }}"
-                            stroke-dashoffset="{{ 2 * 3.14159 * 34 * -0.10 }}"
-                            transform="rotate(-90 45 45)"/>
-                        {{-- Fruits 30% --}}
-                        <circle cx="45" cy="45" r="34" fill="none" stroke="#FCD34D" stroke-width="18"
-                            stroke-dasharray="{{ 2 * 3.14159 * 34 * 0.30 }} {{ 2 * 3.14159 * 34 }}"
-                            stroke-dashoffset="{{ 2 * 3.14159 * 34 * -0.30 }}"
-                            transform="rotate(-90 45 45)"/>
-                        {{-- Rice 40% --}}
-                        <circle cx="45" cy="45" r="34" fill="none" stroke="#059669" stroke-width="18"
-                            stroke-dasharray="{{ 2 * 3.14159 * 34 * 0.40 }} {{ 2 * 3.14159 * 34 }}"
-                            stroke-dashoffset="{{ 2 * 3.14159 * 34 * -0.60 }}"
-                            transform="rotate(-90 45 45)"/>
+                        @php
+                            $circumference = 2 * 3.14159265 * 34;
+                            $cumulativeOffset = 0;
+                            $donutSegments = array_reverse($productSuppliedData ?? []);
+                        @endphp
+                        @foreach ($donutSegments as $item)
+                            @php
+                                $segmentFraction = ($item['percentage'] ?? 0) / 100;
+                                $dashArray = ($segmentFraction * $circumference) . ' ' . $circumference;
+                                $dashOffset = -$cumulativeOffset * $circumference;
+                                $cumulativeOffset += $segmentFraction;
+                            @endphp
+                            @if (($item['percentage'] ?? 0) > 0)
+                                <circle cx="45" cy="45" r="34" fill="none" stroke="{{ $item['color'] }}" stroke-width="18"
+                                    stroke-dasharray="{{ $dashArray }}"
+                                    stroke-dashoffset="{{ $dashOffset }}"
+                                    transform="rotate(-90 45 45)"/>
+                            @endif
+                        @endforeach
                         <circle cx="45" cy="45" r="25" fill="white"/>
                     </svg>
                     <ul class="space-y-1.5 flex-1">
-                        @foreach([['Rice','#059669',40],['Fruits','#FCD34D',30],['Vegetables','#6EE7B7',20],['Others','#D1D5DB',10]] as [$label,$color,$pct])
+                        @foreach ($productSuppliedData ?? [] as $item)
                         <li class="flex items-center justify-between">
                             <span class="flex items-center gap-2 text-[13px] text-gray-600">
-                                <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background:{{ $color }}"></span>
-                                {{ $label }}
+                                <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background:{{ $item['color'] }}"></span>
+                                {{ $item['label'] }}
                             </span>
-                            <span class="text-[13px] font-semibold text-gray-900">{{ $pct }}%</span>
+                            <span class="text-[13px] font-semibold text-gray-900">{{ $item['percentage'] }}%</span>
                         </li>
                         @endforeach
                     </ul>
